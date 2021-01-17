@@ -16,7 +16,8 @@ GLuint program;
 GLuint programSun;
 GLuint programTex;
 GLuint texLoaded;
-GLuint texLoadedMercury;
+GLuint texLoadedsaturn;
+GLuint texLoadedMars;
 GLuint programProc;
 Core::Shader_Loader shaderLoader;
 
@@ -27,7 +28,7 @@ Core::RenderContext sphereContext;
 
 
 float cameraAngle = 0;
-glm::vec3 cameraPos = glm::vec3(-5, 0, 0);
+glm::vec3 cameraPos = glm::vec3(-30, 0, 0);
 glm::vec3 cameraDir;
 
 glm::mat4 cameraMatrix, perspectiveMatrix;
@@ -107,18 +108,22 @@ void renderScene()
 	glUniform3f(glGetUniformLocation(program, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 	glUniform3f(glGetUniformLocation(program, "cameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);*/
 	
-	drawObject(programProc, sphereContext, glm::eulerAngleY(time / 2) * glm::translate(glm::vec3(-5, 0, 0))* glm::eulerAngleXZ(0.4f, 0.6f) * glm::eulerAngleY(time * 2) * glm::translate(glm::vec3(-1, 0, 0)) *glm::scale(glm::vec3(0.2f)), glm::vec3(1.0f, 0.0f, 0.0f));
+
+	//RYSOWANIE PLANET
 	glUseProgram(programTex);
 	glUniform3f(glGetUniformLocation(programTex, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 	glUniform3f(glGetUniformLocation(programTex, "cameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);
-	drawObjectTexture(programTex, sphereContext, glm::eulerAngleY(time / 2) * glm::translate(glm::vec3(-5, 0, 0)) *glm::scale(glm::vec3(0.7f)), texLoaded, 1);
-	drawObjectTexture(programTex, sphereContext, glm::eulerAngleY(time / 2) * glm::translate(glm::vec3(-2, 0, 0)) *glm::scale(glm::vec3(0.3f)), texLoadedMercury, 2);
+	drawObjectTexture(programTex, sphereContext, glm::eulerAngleY(time / 8) * glm::translate(glm::vec3(-6, 0, -6)) *glm::scale(glm::vec3(0.7f)), texLoadedsaturn, 1);
+	drawObjectTexture(programTex, sphereContext, glm::eulerAngleY(time / 6) * glm::translate(glm::vec3(-8, 0, -8)) *glm::scale(glm::vec3(0.4f)), texLoadedMars, 2);
+	
+	//ksiezyc i ziemia
+	drawObjectTexture(programTex, sphereContext, glm::eulerAngleY(time / 10) * glm::translate(glm::vec3(-20, 0, 0)) *glm::scale(glm::vec3(1.0f)), texLoaded, 3);
+	drawObjectTexture(programTex, sphereContext, glm::eulerAngleY(time / 10) * glm::translate(glm::vec3(-20, 0, 0))* glm::eulerAngleXZ(0.4f, 0.6f) * glm::eulerAngleY(time/3) * glm::translate(glm::vec3(-2, 0, 0)) *glm::scale(glm::vec3(0.2f)), texLoadedsaturn, 4);
 
 	glUseProgram(programSun);
 	glUniform3f(glGetUniformLocation(programSun, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 	glUniform3f(glGetUniformLocation(programSun, "cameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);
-	drawObject(programSun, sphereContext, glm::translate(lightPos), glm::vec3(1.0f, 0.8f, 0.2f));
-
+	drawObject(programSun, sphereContext, glm::translate(lightPos)  *glm::scale(glm::vec3(5.0f)), glm::vec3(1.0f, 0.8f, 0.2f));
 	glUniform3f(glGetUniformLocation(programTex, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 	glUniform3f(glGetUniformLocation(programTex, "cameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);
 	//glUniform3f(glGetUniformLocation(programTex, "objectColor"), 1.0, 0.0, 1.0);
@@ -136,7 +141,8 @@ void init()
 	programTex = shaderLoader.CreateProgram("shaders/shader_4_tex.vert", "shaders/shader_4_tex.frag");
 	programProc = shaderLoader.CreateProgram("shaders/shader_proc_tex.vert", "shaders/shader_proc_tex.frag");
 	texLoaded = Core::LoadTexture("textures/earth.png");
-	texLoadedMercury = Core::LoadTexture("textures/mercury.png");
+	texLoadedsaturn = Core::LoadTexture("textures/mercury.png");
+	texLoadedMars = Core::LoadTexture("textures/saturn.png");
 	sphereModel = obj::loadModelFromFile("models/sphere.obj");
 	shipModel = obj::loadModelFromFile("models/spaceship.obj");
 	shipContext.initFromOBJ(shipModel);
