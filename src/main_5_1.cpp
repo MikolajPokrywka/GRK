@@ -142,7 +142,7 @@ void init()
 	programProc = shaderLoader.CreateProgram("shaders/shader_proc_tex.vert", "shaders/shader_proc_tex.frag");
 	texLoaded = Core::LoadTexture("textures/earth.png");
 	texLoadedsaturn = Core::LoadTexture("textures/mercury.png");
-	texLoadedMars = Core::LoadTexture("textures/saturn.png");
+	texLoadedMars = Core::LoadTexture("textures/2k_mars.png");
 	sphereModel = obj::loadModelFromFile("models/sphere.obj");
 	shipModel = obj::loadModelFromFile("models/spaceship.obj");
 	shipContext.initFromOBJ(shipModel);
