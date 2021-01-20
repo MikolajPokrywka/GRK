@@ -2,16 +2,7 @@
 
 glm::mat4 Core::createPerspectiveMatrix(float zNear, float zFar)
 {
-	const float frustumScale = 1.1f;
-	glm::mat4 perspective;
-	perspective[0][0] = frustumScale;
-	perspective[1][1] = frustumScale;
-	perspective[2][2] = (zFar + zNear) / (zNear - zFar);
-	perspective[3][2] = (2 * zFar * zNear) / (zNear - zFar);
-	perspective[2][3] = -1;
-	perspective[3][3] = 0;
-
-	return perspective;
+    return glm::perspectiveFovRH(glm::radians(50.f), 1.f, 1.f, zNear, zFar);
 }
 
 glm::mat4 Core::createViewMatrix( glm::vec3 position, glm::vec3 forward, glm::vec3 up )
@@ -29,4 +20,12 @@ glm::mat4 Core::createViewMatrix( glm::vec3 position, glm::vec3 forward, glm::ve
 	cameraTranslation[3] = glm::vec4(-position, 1.0f);
 
 	return cameraRotation * cameraTranslation;
+}
+
+glm::mat4 Core::createViewMatrixQuat(glm::vec3 position, glm::quat rotation)
+{
+	glm::mat4 cameraTranslation;
+	cameraTranslation[3] = glm::vec4(-position, 1.0f);
+
+	return glm::mat4_cast(rotation) * cameraTranslation;
 }

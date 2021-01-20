@@ -64,16 +64,16 @@ void Core::DrawVertexArrayIndexed( const float * vertexArray, const int * indexA
 }
 
 
-void Core::DrawVertexArray( const VertexData & data )
-{
-	int numAttribs = std::min(VertexData::MAX_ATTRIBS, data.NumActiveAttribs);
-	for(int i = 0; i < numAttribs; i++)
-	{
-		glVertexAttribPointer(i, data.Attribs[i].Size, GL_FLOAT, false, 0, data.Attribs[i].Pointer);
-		glEnableVertexAttribArray(i);
-	}
-	glDrawArrays(GL_TRIANGLES, 0, data.NumVertices);
-}
+//void Core::DrawVertexArray( const VertexData & data )
+//{
+//	int numAttribs = std::min(VertexData::MAX_ATTRIBS, data.NumActiveAttribs);
+//	for(int i = 0; i < numAttribs; i++)
+//	{
+//		glVertexAttribPointer(i, data.Attribs[i].Size, GL_FLOAT, false, 0, data.Attribs[i].Pointer);
+//		glEnableVertexAttribArray(i);
+//	}
+//	glDrawArrays(GL_TRIANGLES, 0, data.NumVertices);
+//}
 
 void Core::DrawContext(Core::RenderContext& context)
 {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glm.hpp"
+#include "ext.hpp"
 
 namespace Core
 {
@@ -11,4 +12,6 @@ namespace Core
 	// up - wektor "w gore" kamery (jednostkowy)
 	// up i forward musza byc ortogonalne!
 	glm::mat4 createViewMatrix(glm::vec3 position, glm::vec3 forward, glm::vec3 up);
+
+	glm::mat4 createViewMatrixQuat(glm::vec3 position, glm::quat rotation);
 }

@@ -34,13 +34,13 @@ namespace Core
 		int Size;
 	};
 
-	struct VertexData
-	{
-		static const int MAX_ATTRIBS = 8;
-		VertexAttribute Attribs[MAX_ATTRIBS];
-		int NumActiveAttribs;
-		int NumVertices;
-	};
+	//struct VertexData
+	//{
+	//	static const int MAX_ATTRIBS = 8;
+	//	VertexAttribute Attribs[MAX_ATTRIBS];
+	//	int NumActiveAttribs;
+	//	int NumVertices;
+	//};
 
 	// Ta funkcja sluzy do rysowania trojkatow, ktorych wierzcholki moga byc opisane wiecej niz jednym atrybutem.
 	// Funkcja przyjmuje jako parametr strukture, w ktorej nalezy zawrzec wszystkie potrzebne dane.
@@ -62,7 +62,7 @@ namespace Core
 	Core::DrawVertexArray(vertexData);
 
 	*/
-	void DrawVertexArray(const VertexData & data);
+	//void DrawVertexArray(const VertexData & data);
 
 	void DrawContext(RenderContext& context);
 }
