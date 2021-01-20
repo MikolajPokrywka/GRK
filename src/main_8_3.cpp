@@ -16,6 +16,27 @@
 using namespace std;
 PxRigidDynamic* sphereBody = nullptr;
 
+GLuint program;
+GLuint programSun;
+GLuint programTex;
+GLuint texLoaded;
+GLuint texLoadedsaturn;
+GLuint texLoadedMars;
+GLuint programProc;
+Core::Shader_Loader shaderLoader;
+
+obj::Model shipModel;
+obj::Model sphereModel;
+Core::RenderContext shipContext;
+Core::RenderContext sphereContext;
+
+
+float cameraAngle = 0;
+glm::vec3 cameraPos = glm::vec3(-30, 0, 0);
+glm::vec3 cameraDir;
+
+glm::mat4 cameraMatrix, perspectiveMatrix;
+
 // contact pairs filtering function
 static PxFilterFlags simulationFilterShader(PxFilterObjectAttributes attributes0,
 	PxFilterData filterData0, PxFilterObjectAttributes attributes1, PxFilterData filterData1,
@@ -88,7 +109,7 @@ public:
 };
 
 SimulationEventCallback simulationEventCallback;
-Physics pxScene(9.8 /* gravity (m/s^2) */, simulationFilterShader,
+Physics pxScene(0, simulationFilterShader,
 	&simulationEventCallback);
 
 // fixed timestep for stable and deterministic simulation
@@ -101,11 +122,7 @@ struct Renderable {
 	GLuint textureId;
 };
 std::vector<Renderable*> renderables;
-// number of rows and columns of boxes the wall consists of
-const int planets = 5;
-const int planets2 = 5;
 
-PxRigidStatic* pxBody = nullptr;
 PxMaterial* pxMaterial = nullptr;
 std::vector<PxRigidDynamic*> pxBodies;
 GLuint pxTexture;
@@ -121,11 +138,6 @@ void initRenderables()
 
 	pxSphereContext.initFromOBJ(pxSphereModel);
 
-	// create ground
-	Renderable* ground = new Renderable();
-	ground->context = &pxSphereContext;
-	ground->textureId = pxTexture;
-	renderables.emplace_back(ground);
 
 	Renderable* sphere = new Renderable();
 	sphere->context = &pxSphereContext;
@@ -136,42 +148,16 @@ void initRenderables()
 void initPhysicsScene()
 {
 
-	/*planeBody = pxScene.physics->createRigidStatic(PxTransformFromPlaneEquation(PxPlane(0, 1, 0, 0)));
-	planeMaterial = pxScene.physics->createMaterial(0.5, 0.5, 0.6);
-	PxGeometry simply = PxPlaneGeometry();
-	PxShape* planeShape = pxScene.physics->createShape(simply, *planeMaterial);
-	planeBody->attachShape(*planeShape);
-	planeShape->release();
-	planeBody->userData = nullptr;
-	pxScene.scene->addActor(*planeBody);
-
-	boxBody = pxScene.physics->createRigidDynamic(PxTransform(1, 10, 1));
-	boxMaterial = pxScene.physics->createMaterial(0.5, 0.5, 0.6);
-	PxShape* boxShape = pxScene.physics->createShape(PxBoxGeometry(1, 1, 1), *boxMaterial);
-	boxBody->attachShape(*boxShape);
-	boxShape->release();
-	boxBody->userData = &boxModelMatrix;
-	pxScene.scene->addActor(*boxBody);*/
-
-	pxBody = pxScene.physics->createRigidStatic(PxTransformFromPlaneEquation(PxPlane(0, 1, 0, 0)));
-	pxMaterial = pxScene.physics->createMaterial(0.5, 0.5, 0.6);
-	PxGeometry simply = PxPlaneGeometry();
-	PxShape* pxShape = pxScene.physics->createShape(simply, *pxMaterial);
-	pxBody->attachShape(*pxShape);
-	pxShape->release();
-	pxBody->userData = renderables[0];
-	pxScene.scene->addActor(*pxBody);
-	pxMaterial = pxScene.physics->createMaterial(0.5, 0.5, 0.6);
 	
-	/*sphereBody = pxScene.physics->createRigidDynamic(PxTransform(cameraPos.x, cameraPos.y, cameraPos.z));
-	sphereMaterial = pxScene.physics->createMaterial(0.5, 0.5, 0.6);
-	PxShape* sphereShape = pxScene.physics->createShape(PxSphereGeometry(1), *sphereMaterial);
+	sphereBody = pxScene.physics->createRigidDynamic(PxTransform(cameraPos.x, cameraPos.y, cameraPos.z+5));
+	pxMaterial = pxScene.physics->createMaterial(0.5, 0.5, 0.6);
+	PxShape* sphereShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 	sphereBody->attachShape(*sphereShape);
-	sphereBody->setLinearVelocity(PxVec3(0, 0, -30));
+	//sphereBody->setLinearVelocity(PxVec3(0, 0, -30));
 	sphereShape->release();
 	sphereBody->userData = renderables.back();
 	sphereBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
-	pxScene.scene->addActor(*sphereBody);*/
+	pxScene.scene->addActor(*sphereBody);
 }
 
 void updateTransforms()
@@ -204,35 +190,9 @@ void updateTransforms()
 				c2.x, c2.y, c2.z, c2.w,
 				c3.x, c3.y, c3.z, c3.w);
 		}
-		//sphereBody->setKinematicTarget(PxTransform(cameraPos.x, cameraPos.y, cameraPos.z - 10));
+		sphereBody->setKinematicTarget(PxTransform(cameraPos.x, cameraPos.y, cameraPos.z - 5));
 	}
 }
-
-
-GLuint program;
-GLuint programSun;
-GLuint programTex;
-GLuint texLoaded;
-GLuint texLoadedsaturn;
-GLuint texLoadedMars;
-GLuint programProc;
-Core::Shader_Loader shaderLoader;
-
-obj::Model shipModel;
-obj::Model sphereModel;
-Core::RenderContext shipContext;
-Core::RenderContext sphereContext;
-
-
-float cameraAngle = 0;
-glm::vec3 cameraPos = glm::vec3(-30, 0, 0);
-glm::vec3 cameraDir;
-
-glm::mat4 cameraMatrix, perspectiveMatrix;
-
-
-
-
 
 
 void keyboard(unsigned char key, int x, int y)
@@ -284,18 +244,48 @@ void drawObjectTexture(GLuint program, Core::RenderContext context, glm::mat4 mo
 	Core::DrawContext(context);
 }
 
+void drawPxObjectTexture(Core::RenderContext *context, glm::mat4 modelMatrix, GLuint textureId)
+{
+	GLuint program = programTex;
+
+	glUseProgram(program);
+	glm::vec3 lightDir = glm::normalize(glm::vec3(0.5, -1, -0.5));
+	glUniform3f(glGetUniformLocation(program, "lightDir"), lightDir.x, lightDir.y, lightDir.z);
+	Core::SetActiveTexture(textureId, "textureSampler", program, 0);
+
+	glm::mat4 transformation = perspectiveMatrix * cameraMatrix * modelMatrix;
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionMatrix"), 1, GL_FALSE, (float*)&transformation);
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelMatrix"), 1, GL_FALSE, (float*)&modelMatrix);
+
+	Core::DrawContext(*context);
+
+	glUseProgram(0);
+}
+
 void renderScene()
 {
 	// Aktualizacja macierzy widoku i rzutowania. Macierze sa przechowywane w zmiennych globalnych, bo uzywa ich funkcja drawObject.
 	// (Bardziej elegancko byloby przekazac je jako argumenty do funkcji, ale robimy tak dla uproszczenia kodu.
 	//  Jest to mozliwe dzieki temu, ze macierze widoku i rzutowania sa takie same dla wszystkich obiektow!)
+	float time = glutGet(GLUT_ELAPSED_TIME) / 1000.f;
+	static double prevTime = time;
+	double dtime = time - prevTime;
+	prevTime = time;
 
+	// Update physics
+	if (dtime < 1.f) {
+		physicsTimeToProcess += dtime;
+		while (physicsTimeToProcess > 0) {
+			// here we perform the physics simulation step
+			pxScene.step(physicsStepTime);
+			physicsTimeToProcess -= physicsStepTime;
+		}
+	}
 	
 
 
 	cameraMatrix = createCameraMatrix();
 	perspectiveMatrix = Core::createPerspectiveMatrix();
-	float time = glutGet(GLUT_ELAPSED_TIME) / 1000.f;
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.0f, 0.3f, 0.3f, 1.0f);
@@ -334,6 +324,11 @@ void renderScene()
 	glUniform3f(glGetUniformLocation(programTex, "cameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);
 	//glUniform3f(glGetUniformLocation(programTex, "objectColor"), 1.0, 0.0, 1.0);
 
+	
+	updateTransforms();
+	for (Renderable* renderable : renderables) {
+		drawPxObjectTexture(renderable->context, renderable->modelMatrix, renderable->textureId);
+	}
 
 
 
@@ -343,6 +338,7 @@ void renderScene()
 
 void init()
 {
+	srand(time(0));
 	glEnable(GL_DEPTH_TEST);
 	program = shaderLoader.CreateProgram("shaders/shader_4_1.vert", "shaders/shader_4_1.frag");
 	programSun = shaderLoader.CreateProgram("shaders/shader_4_2.vert", "shaders/shader_4_2.frag");
@@ -355,11 +351,15 @@ void init()
 	shipModel = obj::loadModelFromFile("models/spaceship.obj");
 	shipContext.initFromOBJ(shipModel);
 	sphereContext.initFromOBJ(sphereModel);
+
+	initRenderables();
+	initPhysicsScene();
 }
 
 void shutdown()
 {
 	shaderLoader.DeleteProgram(program);
+	pxSphereContext.initFromOBJ(pxSphereModel);
 }
 
 void idle()
