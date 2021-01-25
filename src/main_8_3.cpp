@@ -353,12 +353,13 @@ void renderScene()
 	//fizyczne obiekty jeszcze do zrobienia
 	updateTransforms();
 	int i = 0;
-	//drawPxObjectTexture(programTex, renderables[0]->context, renderables[0]->modelMatrix, renderables[0]->textureId, 11);
-	//drawPxObjectTexture(programTex, renderables[1]->context, renderables[1]->modelMatrix, renderables[0]->textureId, 12);
-	for (Renderable* renderable : renderables) {
+	drawPxObjectTexture(programTex, renderables[0]->context, renderables[0]->modelMatrix, renderables[0]->textureId, 11);
+	renderables[1]->modelMatrix = shipModelMatrix;
+	drawPxObjectTexture(programTex, renderables[1]->context, renderables[1]->modelMatrix, renderables[1]->textureId, 12);
+	/*for (Renderable* renderable : renderables) {
 		drawPxObjectTexture(programTex, renderable->context, renderable->modelMatrix, renderable->textureId, 11+i);
 		i += 1;
-	}
+	}*/
 	//drawObjectTexture(programTex, pxSphereContext, glm::translate(glm::vec3(-7, 0, -6)) *glm::scale(glm::vec3(0.4f)), texLoadedSaturn2, 11);
 	//drawObjectTexture(programTex, pxSphereContext, glm::translate(glm::vec3(-25, 0, 0)) *glm::scale(glm::vec3(0.4f)), texLoadedSaturn2, 12);
 	//drawObjectTexture(programTex, pxShipContext, shipModelMatrix, texLoadedSaturn2, 12);
