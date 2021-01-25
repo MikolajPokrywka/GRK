@@ -163,7 +163,7 @@ void initRenderables()
 
 void initPhysicsScene()
 {
-	sphereBody = pxScene.physics->createRigidDynamic(PxTransform(-25, 0, 0));
+	sphereBody = pxScene.physics->createRigidDynamic(PxTransform(-20, 0, -1));
 	pxMaterial = pxScene.physics->createMaterial(0.5, 0.5, 0.6);
 	PxShape* sphereShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 	sphereBody->attachShape(*sphereShape);
