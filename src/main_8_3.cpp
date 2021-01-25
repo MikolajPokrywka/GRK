@@ -29,7 +29,9 @@ GLuint programTex;
 GLuint texLoaded;
 GLuint texLoadedsaturn;
 GLuint texLoadedMars, texLoadedSaturn2;
+GLuint texLoadedSkybox;
 GLuint programProc;
+GLuint programSkybox;
 Core::Shader_Loader shaderLoader;
 
 obj::Model shipModel;
@@ -329,6 +331,14 @@ void renderScene()
 	/*glUseProgram(program);
 	glUniform3f(glGetUniformLocation(program, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 	glUniform3f(glGetUniformLocation(program, "cameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);*/
+
+
+	//SKYBOX
+	glUseProgram(programSkybox);
+	glDepthMask(GL_FALSE);
+	drawObjectTexture(programSkybox, sphereContext, glm::translate(cameraPos + cameraDir * 0.5f) * glm::scale(glm::vec3(10.f)), texLoadedSkybox, 5);
+	glDepthMask(GL_TRUE);
+
 	//RYSOWANIE PLANET
 	glUseProgram(programTex);
 	glUniform3f(glGetUniformLocation(programTex, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
@@ -378,8 +388,10 @@ void init()
 
 	pxProgramColor = shaderLoader.CreateProgram("shaders/shader_color.vert", "shaders/shader_color.frag");
 
+	programSkybox = shaderLoader.CreateProgram("shaders/shader_skybox.vert", "shaders/shader_skybox.frag");
 	texLoaded = Core::LoadTexture("textures/earth.png");
 	texLoadedsaturn = Core::LoadTexture("textures/mercury.png");
+	texLoadedSkybox = Core::LoadTexture("textures/galaxy.png");
 	texLoadedMars = Core::LoadTexture("textures/2k_mars.png");
 	texLoadedSaturn2 = Core::LoadTexture("textures/saturn.png");
 	sphereModel = obj::loadModelFromFile("models/sphere.obj");
