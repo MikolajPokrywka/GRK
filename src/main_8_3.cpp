@@ -22,7 +22,9 @@ GLuint programTex;
 GLuint texLoaded;
 GLuint texLoadedsaturn;
 GLuint texLoadedMars;
+GLuint texLoadedSkybox;
 GLuint programProc;
+GLuint programSkybox;
 Core::Shader_Loader shaderLoader;
 
 obj::Model shipModel;
@@ -305,6 +307,10 @@ void renderScene()
 	glUniform3f(glGetUniformLocation(program, "cameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);*/
 
 
+	//SKYBOX
+
+
+
 	//RYSOWANIE PLANET
 	glUseProgram(programTex);
 	glUniform3f(glGetUniformLocation(programTex, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
@@ -344,8 +350,10 @@ void init()
 	programSun = shaderLoader.CreateProgram("shaders/shader_4_2.vert", "shaders/shader_4_2.frag");
 	programTex = shaderLoader.CreateProgram("shaders/shader_4_tex.vert", "shaders/shader_4_tex.frag");
 	programProc = shaderLoader.CreateProgram("shaders/shader_proc_tex.vert", "shaders/shader_proc_tex.frag");
+	programSkybox = shaderLoader.CreateProgram("shaders/shader_skybox.vert", "shaders/shader_skybox.frag");
 	texLoaded = Core::LoadTexture("textures/earth.png");
 	texLoadedsaturn = Core::LoadTexture("textures/mercury.png");
+	texLoadedSkybox = Core::LoadTexture("textures/galaxy.png");
 	texLoadedMars = Core::LoadTexture("textures/2k_mars.png");
 	sphereModel = obj::loadModelFromFile("models/sphere.obj");
 	shipModel = obj::loadModelFromFile("models/spaceship.obj");
