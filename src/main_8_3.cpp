@@ -308,8 +308,10 @@ void renderScene()
 
 
 	//SKYBOX
-
-
+	glUseProgram(programSkybox);
+	glDepthMask(GL_FALSE);
+	drawObjectTexture(programSkybox, sphereContext, glm::translate(cameraPos + cameraDir * 0.5f) * glm::scale(glm::vec3(10.f)), texLoadedSkybox, 5);
+	glDepthMask(GL_TRUE);
 
 	//RYSOWANIE PLANET
 	glUseProgram(programTex);
