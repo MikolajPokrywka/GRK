@@ -137,6 +137,9 @@ obj::Model pxSphereModel;
 obj::Model pxShipModel;
 Core::RenderContext pxSphereContext;
 Core::RenderContext pxShipContext;
+
+
+
 void initRenderables()
 {
 	// load models
@@ -159,18 +162,23 @@ void initRenderables()
 	ship->context = &pxShipContext;
 	ship->textureId = pxTexture2;
 	renderables.emplace_back(ship);
+
+
+
+
 }
 
 void initPhysicsScene()
 {
+	float time = glutGet(GLUT_ELAPSED_TIME) / 1000.f;
 	sphereBody = pxScene.physics->createRigidDynamic(PxTransform(-20, 0, -1));
 	pxMaterial = pxScene.physics->createMaterial(0.5, 0.5, 0.6);
 	PxShape* sphereShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 	sphereBody->attachShape(*sphereShape);
-	//sphereBody->setLinearVelocity(PxVec3(0, 0, -30));
+	//sphereBody->setLinearVelocity(PxVec3(cos(time*20), 0, sin(time * 20)));
 	sphereShape->release();
 	sphereBody->userData = renderables[0];
-	//sphereBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+	sphereBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 	pxScene.scene->addActor(*sphereBody);
 
 	boxBody_buffor = pxScene.physics->createRigidDynamic(PxTransform(cameraPos.x+2, cameraPos.y, cameraPos.z));
@@ -224,7 +232,9 @@ void updateTransforms()
 				c2.x, c2.y, c2.z, c2.w,
 				c3.x, c3.y, c3.z, c3.w);
 		}
+		float time = glutGet(GLUT_ELAPSED_TIME) / 1000.f;
 		boxBody_buffor->setKinematicTarget(PxTransform(cameraPos.x+2, cameraPos.y, cameraPos.z));
+		sphereBody->setKinematicTarget(PxTransform(10*cos(time / 2), 0, 10 * sin(time/2)));
 	}
 }
 
