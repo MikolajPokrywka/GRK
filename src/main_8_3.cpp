@@ -16,7 +16,7 @@
 using namespace std;
 PxRigidDynamic* sphereBody = nullptr;
 PxRigidDynamic* shipBody = nullptr;
-PxRigidDynamic *boxBody_buffor = nullptr;
+PxRigidDynamic *shipBody_buffor = nullptr;
 PxRigidDynamic *pxSunBody = nullptr;
 int textureArrayLength = 4;
 GLuint pxProgramColor;
@@ -183,6 +183,7 @@ void initRenderables()
 
 void initPhysicsScene()
 {
+	//jedna przykladowa planeta
 	sphereBody = pxScene.physics->createRigidDynamic(PxTransform(-20, 0, -1));
 	pxMaterial = pxScene.physics->createMaterial(0.5, 0.5, 0.6);
 	PxShape* sphereShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
@@ -194,15 +195,15 @@ void initPhysicsScene()
 	pxScene.scene->addActor(*sphereBody);
 
 	//statek
-	boxBody_buffor = pxScene.physics->createRigidDynamic(PxTransform(cameraPos.x+2, cameraPos.y, cameraPos.z));
+	shipBody_buffor = pxScene.physics->createRigidDynamic(PxTransform(cameraPos.x+2, cameraPos.y, cameraPos.z));
 	PxShape* boxShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
-	boxBody_buffor->attachShape(*boxShape);
+	shipBody_buffor->attachShape(*boxShape);
 	boxShape->release();
-	boxBody_buffor->userData = renderables[1];
-	boxBody_buffor->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
-	pxScene.scene->addActor(*boxBody_buffor);
+	shipBody_buffor->userData = renderables[1];
+	shipBody_buffor->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+	pxScene.scene->addActor(*shipBody_buffor);
 
-	//slonce
+	//slonce, ale nie do konco prawdziwe, bo w sloncu jest obiekt, ktory tylko detektuje kolizje
 	pxSunBody = pxScene.physics->createRigidDynamic(PxTransform(0, 0, 0));
 	PxShape* sunShape = pxScene.physics->createShape(PxSphereGeometry(5), *pxMaterial);
 	pxSunBody->attachShape(*sunShape);
@@ -265,8 +266,10 @@ void updateTransforms()
 				c2.x, c2.y, c2.z, c2.w,
 				c3.x, c3.y, c3.z, c3.w);
 		}
+
+
 		float time = glutGet(GLUT_ELAPSED_TIME) / 1000.f;
-		boxBody_buffor->setKinematicTarget(PxTransform(cameraPos.x, cameraPos.y, cameraPos.z));
+		shipBody_buffor->setKinematicTarget(PxTransform(cameraPos.x, cameraPos.y, cameraPos.z));
 		sphereBody->setKinematicTarget(PxTransform(-55*cos(time / 5), 0, -55 * sin(time/5)));
 
 		for (int i = 0; i < textureArrayLength;i++) {
@@ -361,15 +364,11 @@ void renderScene()
 			physicsTimeToProcess -= physicsStepTime;
 		}
 	}
-	
-
 
 	cameraMatrix = createCameraMatrix();
 	perspectiveMatrix = Core::createPerspectiveMatrix();
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.0f, 0.3f, 0.3f, 1.0f);
-
 
 	// Macierz statku "przyczepia" go do kamery. Warto przeanalizowac te linijke i zrozumiec jak to dziala.
 	glm::mat4 shipModelMatrix = glm::translate(cameraPos + cameraDir * 0.5f + glm::vec3(0, -0.25f, 0)) * glm::rotate(-cameraAngle + glm::radians(90.0f), glm::vec3(0, 1, 0)) * glm::scale(glm::vec3(0.25f));
@@ -382,17 +381,17 @@ void renderScene()
 	drawObjectTexture(programSkybox, sphereContext, glm::translate(cameraPos + cameraDir * 0.5f) * glm::scale(glm::vec3(10.f)), texLoadedSkybox, 5);
 	glDepthMask(GL_TRUE);
 
-	//fizyczne obiekty jeszcze do zrobienia
+	//fizyczne obiekty 
 	updateTransforms();
 	int i = 0;
-
-	//renderables[1] to stateks
+	//renderables[1] to statek
 	renderables[1]->modelMatrix = shipModelMatrix;
 	for (Renderable* renderable : renderables) {
 		drawPxObjectTexture(programTex, renderable->context, renderable->modelMatrix, renderable->textureId, 13+i);
 		i += 1;
 	}
 
+	//rysowanie slonca
 	glUseProgram(programSun);
 	glUniform3f(glGetUniformLocation(programSun, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 	glUniform3f(glGetUniformLocation(programSun, "cameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);
