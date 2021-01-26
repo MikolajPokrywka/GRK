@@ -17,8 +17,8 @@ using namespace std;
 PxRigidDynamic* sphereBody = nullptr;
 PxRigidDynamic* shipBody = nullptr;
 PxRigidDynamic *boxBody_buffor = nullptr;
-
-
+PxRigidDynamic *pxSunBody = nullptr;
+int textureArrayLength = 4;
 GLuint pxProgramColor;
 GLuint pxProgramTexture;
 
@@ -163,14 +163,26 @@ void initRenderables()
 	ship->textureId = pxTexture2;
 	renderables.emplace_back(ship);
 
+	Renderable* sun = new Renderable();
+	sun->context = &pxSphereContext;
+	sun->textureId = texLoaded;
+	renderables.emplace_back(sun);
 
+	
+	const GLuint textures[50] = { texLoaded, texLoadedsaturn, texLoadedMars, texLoadedSaturn2 };
+	for (int j = 0; j < textureArrayLength; j++) {
+		// create box
+		Renderable* box = new Renderable();
+		box->context = &pxSphereContext;
+		box->textureId = textures[j];
+		renderables.emplace_back(box);
+	}
 
 
 }
 
 void initPhysicsScene()
 {
-	float time = glutGet(GLUT_ELAPSED_TIME) / 1000.f;
 	sphereBody = pxScene.physics->createRigidDynamic(PxTransform(-20, 0, -1));
 	pxMaterial = pxScene.physics->createMaterial(0.5, 0.5, 0.6);
 	PxShape* sphereShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
@@ -181,6 +193,7 @@ void initPhysicsScene()
 	sphereBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 	pxScene.scene->addActor(*sphereBody);
 
+	//statek
 	boxBody_buffor = pxScene.physics->createRigidDynamic(PxTransform(cameraPos.x+2, cameraPos.y, cameraPos.z));
 	PxShape* boxShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 	boxBody_buffor->attachShape(*boxShape);
@@ -189,6 +202,26 @@ void initPhysicsScene()
 	boxBody_buffor->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 	pxScene.scene->addActor(*boxBody_buffor);
 
+	//slonce
+	pxSunBody = pxScene.physics->createRigidDynamic(PxTransform(0, 0, 0));
+	PxShape* sunShape = pxScene.physics->createShape(PxSphereGeometry(5), *pxMaterial);
+	pxSunBody->attachShape(*sunShape);
+	sunShape->release();
+	pxSunBody->userData = renderables[2];
+	//boxBody_buffor->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+	pxScene.scene->addActor(*pxSunBody);
+
+
+	for (int j = 0;j < textureArrayLength;j++) {
+		PxRigidDynamic *boxBody_buffor2 = pxScene.physics->createRigidDynamic(PxTransform(-10 *j+100, 10* j, -1));
+		PxShape* boxShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
+		boxBody_buffor2->attachShape(*boxShape);
+		boxShape->release();
+		boxBody_buffor2->userData = renderables[j + 3];
+		boxBody_buffor2->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+		pxScene.scene->addActor(*boxBody_buffor2);
+		pxBodies.push_back(boxBody_buffor2);
+	}
 
 
 	//shipBody = pxScene.physics->createRigidDynamic(PxTransform(-25, -2, 0));
@@ -233,8 +266,17 @@ void updateTransforms()
 				c3.x, c3.y, c3.z, c3.w);
 		}
 		float time = glutGet(GLUT_ELAPSED_TIME) / 1000.f;
-		boxBody_buffor->setKinematicTarget(PxTransform(cameraPos.x+2, cameraPos.y, cameraPos.z));
-		sphereBody->setKinematicTarget(PxTransform(10*cos(time / 2), 0, 10 * sin(time/2)));
+		boxBody_buffor->setKinematicTarget(PxTransform(cameraPos.x, cameraPos.y, cameraPos.z));
+		sphereBody->setKinematicTarget(PxTransform(-55*cos(time / 5), 0, -55 * sin(time/5)));
+
+		for (int i = 0; i < textureArrayLength;i++) {
+			if (i % 2 == 0) {
+				pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10)* cos((time + 2 * i) / 10), 0, (i * 4 + 10)* sin((time + 2 * i) / 10)));
+			}
+			else {
+				pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10)* -cos((time + 2 * i) / 10), 0, (i * 4 + 10)* -sin((time + 2 * i) / 10)));
+			}
+		};
 	}
 }
 
@@ -332,15 +374,6 @@ void renderScene()
 	// Macierz statku "przyczepia" go do kamery. Warto przeanalizowac te linijke i zrozumiec jak to dziala.
 	glm::mat4 shipModelMatrix = glm::translate(cameraPos + cameraDir * 0.5f + glm::vec3(0, -0.25f, 0)) * glm::rotate(-cameraAngle + glm::radians(90.0f), glm::vec3(0, 1, 0)) * glm::scale(glm::vec3(0.25f));
 	glm::vec3 lightPos = glm::vec3(0, 0, 0);
-	//glUniform3f(glGetUniformLocation(program, "light_dir"), 1, 1, 0);
-	glUseProgram(programProc);
-	glUniform3f(glGetUniformLocation(programTex, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
-	glUniform3f(glGetUniformLocation(programTex, "cameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);
-	//drawObject(programProc, shipContext, shipModelMatrix, glm::vec3(1, 1, 1));
-	//drawObject(program, sphereContext, glm::eulerAngleY(time / 2) * glm::translate(glm::vec3(-5, 0, 0))*glm::scale(glm::vec3(0.7f)), glm::vec3(1.0f, 0.0f, 1.0f));
-	/*glUseProgram(program);
-	glUniform3f(glGetUniformLocation(program, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
-	glUniform3f(glGetUniformLocation(program, "cameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);*/
 
 
 	//SKYBOX
@@ -349,40 +382,21 @@ void renderScene()
 	drawObjectTexture(programSkybox, sphereContext, glm::translate(cameraPos + cameraDir * 0.5f) * glm::scale(glm::vec3(10.f)), texLoadedSkybox, 5);
 	glDepthMask(GL_TRUE);
 
-	//RYSOWANIE PLANET
-	glUseProgram(programTex);
-	glUniform3f(glGetUniformLocation(programTex, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
-	glUniform3f(glGetUniformLocation(programTex, "cameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);
-	drawObjectTexture(programTex, sphereContext, glm::eulerAngleY(time / 8) * glm::translate(glm::vec3(-6, 0, -6)) *glm::scale(glm::vec3(0.7f)), texLoadedsaturn, 1);
-	drawObjectTexture(programTex, sphereContext, glm::eulerAngleY(time / 6) * glm::translate(glm::vec3(-8, 0, -8)) *glm::scale(glm::vec3(0.4f)), texLoadedMars, 2);
-
-	//ksiezyc i ziemia
-	drawObjectTexture(programTex, sphereContext, glm::eulerAngleY(time / 10) * glm::translate(glm::vec3(-20, 0, 0)) *glm::scale(glm::vec3(1.0f)), texLoaded, 3);
-	drawObjectTexture(programTex, sphereContext, glm::eulerAngleY(time / 10) * glm::translate(glm::vec3(-20, 0, 0))* glm::eulerAngleXZ(0.4f, 0.6f) * glm::eulerAngleY(time / 3) * glm::translate(glm::vec3(-2, 0, 0)) *glm::scale(glm::vec3(0.2f)), texLoadedsaturn, 4);
-
 	//fizyczne obiekty jeszcze do zrobienia
 	updateTransforms();
 	int i = 0;
-	drawPxObjectTexture(programTex, renderables[0]->context, renderables[0]->modelMatrix, renderables[0]->textureId, 11);
-	renderables[1]->modelMatrix = shipModelMatrix;
-	drawPxObjectTexture(programTex, renderables[1]->context, renderables[1]->modelMatrix, renderables[1]->textureId, 12);
-	/*for (Renderable* renderable : renderables) {
-		drawPxObjectTexture(programTex, renderable->context, renderable->modelMatrix, renderable->textureId, 11+i);
-		i += 1;
-	}*/
-	//drawObjectTexture(programTex, pxSphereContext, glm::translate(glm::vec3(-7, 0, -6)) *glm::scale(glm::vec3(0.4f)), texLoadedSaturn2, 11);
-	//drawObjectTexture(programTex, pxSphereContext, glm::translate(glm::vec3(-25, 0, 0)) *glm::scale(glm::vec3(0.4f)), texLoadedSaturn2, 12);
-	//drawObjectTexture(programTex, pxShipContext, shipModelMatrix, texLoadedSaturn2, 12);
 
+	//renderables[1] to stateks
+	renderables[1]->modelMatrix = shipModelMatrix;
+	for (Renderable* renderable : renderables) {
+		drawPxObjectTexture(programTex, renderable->context, renderable->modelMatrix, renderable->textureId, 13+i);
+		i += 1;
+	}
 
 	glUseProgram(programSun);
 	glUniform3f(glGetUniformLocation(programSun, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 	glUniform3f(glGetUniformLocation(programSun, "cameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);
 	drawObject(programSun, sphereContext, glm::translate(lightPos)  *glm::scale(glm::vec3(5.0f)), glm::vec3(1.0f, 0.8f, 0.2f));
-	glUniform3f(glGetUniformLocation(programTex, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
-	glUniform3f(glGetUniformLocation(programTex, "cameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);
-	//glUniform3f(glGetUniformLocation(programTex, "objectColor"), 1.0, 0.0, 1.0);
-
 
 	glUseProgram(0);
 	glutSwapBuffers();
