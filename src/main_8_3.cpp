@@ -243,6 +243,8 @@ void updateTransforms()
 	PxU32 nbActors = pxScene.scene->getNbActors(actorFlags);
 	if (nbActors)
 	{
+		float time = glutGet(GLUT_ELAPSED_TIME) / 1000.f;
+
 		std::vector<PxRigidActor*> actors(nbActors);
 		pxScene.scene->getActors(actorFlags, (PxActor**)&actors[0], nbActors);
 		for (auto actor : actors)
@@ -264,11 +266,12 @@ void updateTransforms()
 				c0.x, c0.y, c0.z, c0.w,
 				c1.x, c1.y, c1.z, c1.w,
 				c2.x, c2.y, c2.z, c2.w,
-				c3.x, c3.y, c3.z, c3.w);
+				c3.x, c3.y, c3.z, c3.w)
+				* glm::rotate(-time/2, glm::vec3(0, 1, 0));
 		}
 
 
-		float time = glutGet(GLUT_ELAPSED_TIME) / 1000.f;
+		
 		shipBody_buffor->setKinematicTarget(PxTransform(cameraPos.x, cameraPos.y, cameraPos.z));
 		sphereBody->setKinematicTarget(PxTransform(-55*cos(time / 5), 0, -55 * sin(time/5)));
 
