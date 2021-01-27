@@ -267,13 +267,13 @@ void updateTransforms()
 				c1.x, c1.y, c1.z, c1.w,
 				c2.x, c2.y, c2.z, c2.w,
 				c3.x, c3.y, c3.z, c3.w)
-				* glm::rotate(-time/2, glm::vec3(0, 1, 0));
+				* glm::rotate(time/2, glm::vec3(0, 1, 0));
 		}
 
 
 		
 		shipBody_buffor->setKinematicTarget(PxTransform(cameraPos.x, cameraPos.y, cameraPos.z));
-		sphereBody->setKinematicTarget(PxTransform(-55*cos(time / 5), 0, -55 * sin(time/5)));
+		sphereBody->setKinematicTarget(PxTransform(-7 * sin(time), -7*cos(time), -7 * cos(time)));
 
 		for (int i = 0; i < textureArrayLength;i++) {
 			if (i % 2 == 0) {
