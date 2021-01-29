@@ -16,8 +16,8 @@
 using namespace std;
 PxRigidDynamic* sphereBody = nullptr;
 PxRigidDynamic* shipBody = nullptr;
-PxRigidDynamic *shipBody_buffor = nullptr;
-PxRigidDynamic *pxSunBody = nullptr;
+PxRigidDynamic* shipBody_buffor = nullptr;
+PxRigidDynamic* pxSunBody = nullptr;
 int textureArrayLength = 4;
 GLuint pxProgramColor;
 GLuint pxProgramTexture;
@@ -40,11 +40,9 @@ Core::RenderContext shipContext;
 Core::RenderContext sphereContext;
 
 
-float shipAngle = 0;
+float cameraAngle = 0;
 glm::vec3 cameraPos = glm::vec3(-30, 0, 0);
 glm::vec3 cameraDir;
-glm::vec3 shipPos = glm::vec3(-30, 0, 0);
-glm::vec3 shipDir;
 
 glm::mat4 cameraMatrix, perspectiveMatrix;
 
@@ -70,41 +68,41 @@ public:
 	{
 		// HINT: You can check which actors are in contact
 		// using pairHeader.actors[0] and pairHeader.actors[1]
-		
-			cout << "nbPairs: ";
-			cout << nbPairs;
-			cout << "\n";
-			for (PxU32 i = 0; i < nbPairs; i++)
-			{
-				const PxContactPair& cp = pairs[i];
 
-				// HINT: two get the contact points, use
-				// PxContactPair::extractContacts
-				// You need to provide the function with a buffer
-				// in which the contact points will be stored.
-				// Create an array (vector) of type PxContactPairPoint
-				// The number of elements in array should be at least
-				// cp.contactCount (which is the number of contact points)
-				// You also need to provide the function with the
-				// size of the buffer (it should equal the size of the
-				// array in bytes)
-				// Finally, for every extracted point, you can access
-				// its details, such as position
-				std::vector<PxContactPairPoint> pairPoints(cp.contactCount);
-				PxU32 nbContacts = cp.extractContacts(data(pairPoints), sizeof(pairPoints));
-				cout << "nbContacts: ";
-				cout << nbContacts;
+		cout << "nbPairs: ";
+		cout << nbPairs;
+		cout << "\n";
+		for (PxU32 i = 0; i < nbPairs; i++)
+		{
+			const PxContactPair& cp = pairs[i];
+
+			// HINT: two get the contact points, use
+			// PxContactPair::extractContacts
+			// You need to provide the function with a buffer
+			// in which the contact points will be stored.
+			// Create an array (vector) of type PxContactPairPoint
+			// The number of elements in array should be at least
+			// cp.contactCount (which is the number of contact points)
+			// You also need to provide the function with the
+			// size of the buffer (it should equal the size of the
+			// array in bytes)
+			// Finally, for every extracted point, you can access
+			// its details, such as position
+			std::vector<PxContactPairPoint> pairPoints(cp.contactCount);
+			PxU32 nbContacts = cp.extractContacts(data(pairPoints), sizeof(pairPoints));
+			cout << "nbContacts: ";
+			cout << nbContacts;
+			cout << "\n";
+			nbContacts;
+			for (int j = 0; j < nbContacts; j++) {
+				cout << "Positions: ";
+				cout << pairPoints[j].position.x;
+				cout << " ";
+				cout << pairPoints[j].position.y;
+				cout << " ";
+				cout << pairPoints[j].position.z;
 				cout << "\n";
-				nbContacts;
-				for (int j = 0; j < nbContacts;j++) {
-					cout << "Positions: ";
-					cout << pairPoints[j].position.x;
-					cout << " ";
-					cout << pairPoints[j].position.y;
-					cout << " ";
-					cout << pairPoints[j].position.z;
-					cout << "\n";
-				}
+			}
 		}
 	}
 
@@ -114,7 +112,7 @@ public:
 	virtual void onWake(PxActor** actors, PxU32 count) {}
 	virtual void onSleep(PxActor** actors, PxU32 count) {}
 	virtual void onTrigger(PxTriggerPair* pairs, PxU32 count) {}
-	virtual void onAdvance(const PxRigidBody*const* bodyBuffer, const PxTransform* poseBuffer, const PxU32 count) {}
+	virtual void onAdvance(const PxRigidBody* const* bodyBuffer, const PxTransform* poseBuffer, const PxU32 count) {}
 };
 
 SimulationEventCallback simulationEventCallback;
@@ -170,7 +168,7 @@ void initRenderables()
 	sun->textureId = texLoaded;
 	renderables.emplace_back(sun);
 
-	
+
 	const GLuint textures[50] = { texLoaded, texLoadedsaturn, texLoadedMars, texLoadedSaturn2 };
 	for (int j = 0; j < textureArrayLength; j++) {
 		// create box
@@ -197,7 +195,7 @@ void initPhysicsScene()
 	pxScene.scene->addActor(*sphereBody);
 
 	//statek
-	shipBody_buffor = pxScene.physics->createRigidDynamic(PxTransform(shipPos.x, shipPos.y, shipPos.z));
+	shipBody_buffor = pxScene.physics->createRigidDynamic(PxTransform(cameraPos.x, cameraPos.y, cameraPos.z));
 	PxShape* boxShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 	shipBody_buffor->attachShape(*boxShape);
 	boxShape->release();
@@ -215,8 +213,8 @@ void initPhysicsScene()
 	pxScene.scene->addActor(*pxSunBody);
 
 
-	for (int j = 0;j < textureArrayLength;j++) {
-		PxRigidDynamic *boxBody_buffor2 = pxScene.physics->createRigidDynamic(PxTransform(-10 *j+100, 10* j, -1));
+	for (int j = 0; j < textureArrayLength; j++) {
+		PxRigidDynamic* boxBody_buffor2 = pxScene.physics->createRigidDynamic(PxTransform(-10 * j + 100, 10 * j, -1));
 		PxShape* boxShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 		boxBody_buffor2->attachShape(*boxShape);
 		boxShape->release();
@@ -254,14 +252,14 @@ void updateTransforms()
 			// We use the userData of the objects to set up the model matrices
 			// of proper renderables.
 			if (!actor->userData) continue;
-			Renderable *renderable = (Renderable*)actor->userData;
+			Renderable* renderable = (Renderable*)actor->userData;
 
 			// get world matrix of the object (actor)
 			PxMat44 transform = actor->getGlobalPose();
-			auto &c0 = transform.column0;
-			auto &c1 = transform.column1;
-			auto &c2 = transform.column2;
-			auto &c3 = transform.column3;
+			auto& c0 = transform.column0;
+			auto& c1 = transform.column1;
+			auto& c2 = transform.column2;
+			auto& c3 = transform.column3;
 
 			// set up the model matrix used for the rendering
 			renderable->modelMatrix = glm::mat4(
@@ -269,20 +267,20 @@ void updateTransforms()
 				c1.x, c1.y, c1.z, c1.w,
 				c2.x, c2.y, c2.z, c2.w,
 				c3.x, c3.y, c3.z, c3.w)
-				* glm::rotate(time/2, glm::vec3(0, 1, 0));
+				* glm::rotate(time / 2, glm::vec3(0, 1, 0));
 		}
 
 
-		
-		shipBody_buffor->setKinematicTarget(PxTransform(shipPos.x, shipPos.y, shipPos.z));
-		sphereBody->setKinematicTarget(PxTransform(-7 * sin(time), -7*cos(time), -7 * cos(time)));
 
-		for (int i = 0; i < textureArrayLength;i++) {
+		shipBody_buffor->setKinematicTarget(PxTransform(cameraPos.x, cameraPos.y, cameraPos.z));
+		sphereBody->setKinematicTarget(PxTransform(-7 * sin(time), -7 * cos(time), -7 * cos(time)));
+
+		for (int i = 0; i < textureArrayLength; i++) {
 			if (i % 2 == 0) {
-				pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10)* cos((time + 2 * i) / 10), 0, (i * 4 + 10)* sin((time + 2 * i) / 10)));
+				pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10) * cos((time + 2 * i) / 10), 0, (i * 4 + 10) * sin((time + 2 * i) / 10)));
 			}
 			else {
-				pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10)* -cos((time + 2 * i) / 10), 0, (i * 4 + 10)* -sin((time + 2 * i) / 10)));
+				pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10) * -cos((time + 2 * i) / 10), 0, (i * 4 + 10) * -sin((time + 2 * i) / 10)));
 			}
 		};
 	}
@@ -295,28 +293,21 @@ void keyboard(unsigned char key, int x, int y)
 	float moveSpeed = 0.1f;
 	switch (key)
 	{
-	case 'z': shipAngle -= angleSpeed; break;
-	case 'x': shipAngle += angleSpeed; break;
-	case 'w': shipPos += shipDir * moveSpeed; break;
-	case 's': shipPos -= shipDir * moveSpeed; break;
-	case 'd': shipPos += glm::cross(shipDir, glm::vec3(0, 1, 0)) * moveSpeed; break;
-	case 'a': shipPos -= glm::cross(shipDir, glm::vec3(0, 1, 0)) * moveSpeed; break;
-	case 'e': shipPos += glm::cross(shipDir, glm::vec3(1, 0, 0)) * moveSpeed; break;
-	case 'q': shipPos -= glm::cross(shipDir, glm::vec3(1, 0, 0)) * moveSpeed; break;
+	case 'z': cameraAngle -= angleSpeed; break;
+	case 'x': cameraAngle += angleSpeed; break;
+	case 'w': cameraPos += cameraDir * moveSpeed; break;
+	case 's': cameraPos -= cameraDir * moveSpeed; break;
+	case 'd': cameraPos += glm::cross(cameraDir, glm::vec3(0, 1, 0)) * moveSpeed; break;
+	case 'a': cameraPos -= glm::cross(cameraDir, glm::vec3(0, 1, 0)) * moveSpeed; break;
+	case 'e': cameraPos += glm::cross(cameraDir, glm::vec3(1, 0, 0)) * moveSpeed; break;
+	case 'q': cameraPos -= glm::cross(cameraDir, glm::vec3(1, 0, 0)) * moveSpeed; break;
 	}
 }
 
-
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 glm::mat4 createCameraMatrix()
 {
 	// Obliczanie kierunku patrzenia kamery (w plaszczyznie x-z) przy uzyciu zmiennej cameraAngle kontrolowanej przez klawisze.
-	//shipDir = glm::vec3(cosf(shipAngle), 0.0f, sinf(shipAngle));
-	//shipDir = glm::vec3(cosf(0), 0.0f, sinf(0));
-	shipDir = glm::vec3(cosf(shipAngle), 0.0f, sinf(shipAngle));
-	cameraDir = shipDir;
-
-	cameraPos = shipPos;
+	cameraDir = glm::vec3(cosf(cameraAngle), 0.0f, sinf(cameraAngle));
 	glm::vec3 up = glm::vec3(0, 1, 0);
 
 	return Core::createViewMatrix(cameraPos, cameraDir, up);
@@ -345,7 +336,7 @@ void drawObjectTexture(GLuint program, Core::RenderContext context, glm::mat4 mo
 	Core::DrawContext(context);
 }
 
-void drawPxObjectTexture(GLuint program, Core::RenderContext *context, glm::mat4 modelMatrix, GLuint id, int textureUnit)
+void drawPxObjectTexture(GLuint program, Core::RenderContext* context, glm::mat4 modelMatrix, GLuint id, int textureUnit)
 {
 	Core::SetActiveTexture(id, "colorTexture", program, textureUnit);
 	//glUniform3f(glGetUniformLocation(program, "colorTexture"), Core::SetActiveTexture(),);
@@ -382,18 +373,15 @@ void renderScene()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.0f, 0.3f, 0.3f, 1.0f);
 
-
-
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! NIE ZAMIENIANE ALE NIE WIADOMO CO Z TYM
 	// Macierz statku "przyczepia" go do kamery. Warto przeanalizowac te linijke i zrozumiec jak to dziala.
-	glm::mat4 shipModelMatrix = glm::translate(shipPos + shipDir * 0.5f + glm::vec3(0, -0.25f, 0)) * glm::rotate(-shipAngle + glm::radians(90.0f), glm::vec3(0, 1, 0)) * glm::scale(glm::vec3(0.25f));
+	glm::mat4 shipModelMatrix = glm::translate(cameraPos + cameraDir * 0.5f + glm::vec3(0, -0.25f, 0)) * glm::rotate(-cameraAngle + glm::radians(90.0f), glm::vec3(0, 1, 0)) * glm::scale(glm::vec3(0.25f));
 	glm::vec3 lightPos = glm::vec3(0, 0, 0);
 
 
 	//SKYBOX
 	glUseProgram(programSkybox);
 	glDepthMask(GL_FALSE);
-	drawObjectTexture(programSkybox, sphereContext, glm::translate(shipPos + shipDir * 0.5f) * glm::scale(glm::vec3(70.f)), texLoadedSkybox, 5);
+	drawObjectTexture(programSkybox, sphereContext, glm::translate(cameraPos + cameraDir * 0.5f) * glm::scale(glm::vec3(70.f)), texLoadedSkybox, 5);
 	glDepthMask(GL_TRUE);
 
 	//fizyczne obiekty 
@@ -402,15 +390,15 @@ void renderScene()
 	//renderables[1] to statek
 	renderables[1]->modelMatrix = shipModelMatrix;
 	for (Renderable* renderable : renderables) {
-		drawPxObjectTexture(programTex, renderable->context, renderable->modelMatrix, renderable->textureId, 13+i);
+		drawPxObjectTexture(programTex, renderable->context, renderable->modelMatrix, renderable->textureId, 13 + i);
 		i += 1;
 	}
 
 	//rysowanie slonca
 	glUseProgram(programSun);
 	glUniform3f(glGetUniformLocation(programSun, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
-	glUniform3f(glGetUniformLocation(programSun, "shipPos"), shipPos.x, shipPos.y, shipPos.z);
-	drawObject(programSun, sphereContext, glm::translate(lightPos)  *glm::scale(glm::vec3(5.0f)), glm::vec3(1.0f, 0.8f, 0.2f));
+	glUniform3f(glGetUniformLocation(programSun, "cameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);
+	drawObject(programSun, sphereContext, glm::translate(lightPos) * glm::scale(glm::vec3(5.0f)), glm::vec3(1.0f, 0.8f, 0.2f));
 
 	glUseProgram(0);
 	glutSwapBuffers();
@@ -454,7 +442,7 @@ void idle()
 	glutPostRedisplay();
 }
 
-int main(int argc, char ** argv)
+int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);

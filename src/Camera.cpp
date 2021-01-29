@@ -2,7 +2,7 @@
 
 glm::mat4 Core::createPerspectiveMatrix(float zNear, float zFar)
 {
-    return glm::perspectiveFovRH(glm::radians(50.f), 1.f, 1.f, zNear, zFar);
+    return glm::perspectiveFovRH(glm::radians(80.f), 1.f, 1.f, zNear, zFar);
 }
 
 glm::mat4 Core::createViewMatrix( glm::vec3 position, glm::vec3 forward, glm::vec3 up )
@@ -18,6 +18,7 @@ glm::mat4 Core::createViewMatrix( glm::vec3 position, glm::vec3 forward, glm::ve
 
 	glm::mat4 cameraTranslation;
 	cameraTranslation[3] = glm::vec4(-position, 1.0f);
+	
 
 	return cameraRotation * cameraTranslation;
 }
