@@ -4,6 +4,7 @@
 #include "ext.hpp"
 #include <iostream>
 #include <cmath>
+#include <queue>
 
 #include "Texture.h"
 #include "Shader_Loader.h"
@@ -45,6 +46,7 @@ glm::vec3 cameraPos = glm::vec3(-30, 0, 0);
 glm::vec3 cameraDir;
 glm::vec3 shipPos = glm::vec3(-30, 0, 0);
 glm::vec3 shipDir;
+queue<glm::mat4> camera_view_matrices_delay;
 
 glm::mat4 cameraMatrix, perspectiveMatrix;
 
@@ -310,16 +312,22 @@ void keyboard(unsigned char key, int x, int y)
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 glm::mat4 createCameraMatrix()
 {
-	// Obliczanie kierunku patrzenia kamery (w plaszczyznie x-z) przy uzyciu zmiennej cameraAngle kontrolowanej przez klawisze.
-	//shipDir = glm::vec3(cosf(shipAngle), 0.0f, sinf(shipAngle));
-	//shipDir = glm::vec3(cosf(0), 0.0f, sinf(0));
+	// Obliczanie kierunku patrzenia kamery (w plaszczyznie x-z) na podstawie zwrotu statku kontrolowanej przez klawisze.
 	shipDir = glm::vec3(cosf(shipAngle), 0.0f, sinf(shipAngle));
 	cameraDir = shipDir;
 
 	cameraPos = shipPos;
 	glm::vec3 up = glm::vec3(0, 1, 0);
 
-	return Core::createViewMatrix(cameraPos, cameraDir, up);
+	// Camera delay
+	while (camera_view_matrices_delay.size() < 17) {
+		camera_view_matrices_delay.push(Core::createViewMatrix(cameraPos, cameraDir, up));
+	}
+
+	//return Core::createViewMatrix(cameraPos, cameraDir, up);
+	glm::mat4 last_view = camera_view_matrices_delay.front();
+	camera_view_matrices_delay.pop();
+	return last_view;
 }
 
 void drawObject(GLuint program, Core::RenderContext context, glm::mat4 modelMatrix, glm::vec3 color)
@@ -384,8 +392,7 @@ void renderScene()
 
 
 
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! NIE ZAMIENIANE ALE NIE WIADOMO CO Z TYM
-	// Macierz statku "przyczepia" go do kamery. Warto przeanalizowac te linijke i zrozumiec jak to dziala.
+	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	glm::mat4 shipModelMatrix = glm::translate(shipPos + shipDir * 0.5f + glm::vec3(0, -0.25f, 0)) * glm::rotate(-shipAngle + glm::radians(90.0f), glm::vec3(0, 1, 0)) * glm::scale(glm::vec3(0.25f));
 	glm::vec3 lightPos = glm::vec3(0, 0, 0);
 
