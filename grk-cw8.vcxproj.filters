@@ -103,5 +103,17 @@
     <None Include="shaders\shader_color.vert">
       <Filter>Shader Files</Filter>
     </None>
+    <None Include="shaders\shader_skybox.frag">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shader_skybox.vert">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shader_4_tex.frag">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shader_4_tex.vert">
+      <Filter>Shader Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

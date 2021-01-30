@@ -42,7 +42,7 @@ Core::RenderContext sphereContext;
 
 
 float shipAngle = 0;
-glm::vec3 cameraPos = glm::vec3(-30, 0, 0);
+glm::vec3 cameraPos;
 glm::vec3 cameraDir;
 glm::vec3 shipPos = glm::vec3(-30, 0, 0);
 glm::vec3 shipDir;
@@ -136,11 +136,22 @@ std::vector<Renderable*> renderables;
 
 PxMaterial* pxMaterial = nullptr;
 std::vector<PxRigidDynamic*> pxBodies;
-GLuint pxTexture, pxTexture2;
+GLuint pxTexture, pxTexture2, pxAsteroid1Texture, pxAsteroid6Texture;
+
+// normals
+GLuint normalAsteroid1;
+
 obj::Model pxSphereModel;
 obj::Model pxShipModel;
+obj::Model pxAsteroid1Model;
+obj::Model pxAsteroid6Model;
 Core::RenderContext pxSphereContext;
 Core::RenderContext pxShipContext;
+Core::RenderContext pxAsteroid1Context;
+Core::RenderContext pxAsteroid6Context;
+
+
+
 
 
 
@@ -149,12 +160,21 @@ void initRenderables()
 	// load models
 	pxSphereModel = obj::loadModelFromFile("models/sphere.obj");
 	pxShipModel = obj::loadModelFromFile("models/spaceship.obj");
+	pxAsteroid1Model = obj::loadModelFromFile("models/Asteroid_Small1.obj");
+	pxAsteroid6Model = obj::loadModelFromFile("models/Asteroid_Small6.obj");
 
 	// load textures
 	pxTexture = Core::LoadTexture("textures/saturn.png");
 	pxTexture2 = Core::LoadTexture("textures/2k_mars.png");
+	pxAsteroid1Texture = Core::LoadTexture("textures/Aster_Small_1_Color.png");
+	pxAsteroid6Texture = Core::LoadTexture("textures/asteroid.png");
 	pxSphereContext.initFromOBJ(pxSphereModel);
 	pxShipContext.initFromOBJ(pxShipModel);
+	pxAsteroid1Context.initFromOBJ(pxAsteroid1Model);
+	pxAsteroid6Context.initFromOBJ(pxAsteroid6Model);
+
+	// load normal mapping textures
+	normalAsteroid1 = Core::LoadTexture("textures/Aster_Small_1_NM.png");
 
 
 	Renderable* sphere = new Renderable();
@@ -171,6 +191,16 @@ void initRenderables()
 	sun->context = &pxSphereContext;
 	sun->textureId = texLoaded;
 	renderables.emplace_back(sun);
+
+	Renderable* asteroid1 = new Renderable();
+	asteroid1->context = &pxAsteroid1Context;
+	asteroid1->textureId = pxAsteroid1Texture;
+	renderables.emplace_back(asteroid1);
+
+	Renderable* asteroid6 = new Renderable();
+	asteroid6->context = &pxAsteroid6Context;
+	asteroid6->textureId = pxAsteroid6Texture;
+	renderables.emplace_back(asteroid6);
 
 	
 	const GLuint textures[50] = { texLoaded, texLoadedsaturn, texLoadedMars, texLoadedSaturn2 };
@@ -281,7 +311,9 @@ void updateTransforms()
 
 		for (int i = 0; i < textureArrayLength;i++) {
 			if (i % 2 == 0) {
-				pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10)* cos((time + 2 * i) / 10), 0, (i * 4 + 10)* sin((time + 2 * i) / 10)));
+				//TUTAJ ASTEROIDY - ta zakomentowana linia do testów
+				//pxBodies[i]->setKinematicTarget(PxTransform(-14, 0, i*2));
+				pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10) * cos((time + 2 * i) / 10), 0, (i * 4 + 10) * sin((time + 2 * i) / 10)));
 			}
 			else {
 				pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10)* -cos((time + 2 * i) / 10), 0, (i * 4 + 10)* -sin((time + 2 * i) / 10)));
@@ -353,6 +385,36 @@ void drawObjectTexture(GLuint program, Core::RenderContext context, glm::mat4 mo
 	Core::DrawContext(context);
 }
 
+
+// DUPA NIE DZIALA
+void setUpUniforms(GLuint program, glm::mat4 modelMatrix)
+{
+	//glUniform3f(glGetUniformLocation(program, "lightDir"), lightDir.x, lightDir.y, lightDir.z);
+	glUniform3f(glGetUniformLocation(program, "cameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);
+
+	glm::mat4 transformation = perspectiveMatrix * cameraMatrix * modelMatrix;
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionMatrix"), 1, GL_FALSE, (float*)&transformation);
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelMatrix"), 1, GL_FALSE, (float*)&modelMatrix);
+}
+
+// DUPA TO TEZ NIE
+void drawObjectTextureWithNormals(obj::Model* model, glm::mat4 modelMatrix, GLuint textureId, GLuint normalmapId)
+{
+	GLuint program = programTex;
+
+	glUseProgram(program);
+
+	setUpUniforms(program, modelMatrix);
+	Core::SetActiveTexture(textureId, "textureSampler", program, 0);
+	// NORMAL MAPPING 8
+	Core::SetActiveTexture(normalmapId, "normalSampler", program, 1);
+
+	Core::DrawModel(model);
+
+	glUseProgram(0);
+}
+
+
 void drawPxObjectTexture(GLuint program, Core::RenderContext *context, glm::mat4 modelMatrix, GLuint id, int textureUnit)
 {
 	Core::SetActiveTexture(id, "colorTexture", program, textureUnit);
@@ -392,7 +454,7 @@ void renderScene()
 
 
 
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// Utworzenie macierzy statku na podstawie jego pozycji
 	glm::mat4 shipModelMatrix = glm::translate(shipPos + shipDir * 0.5f + glm::vec3(0, -0.25f, 0)) * glm::rotate(-shipAngle + glm::radians(90.0f), glm::vec3(0, 1, 0)) * glm::scale(glm::vec3(0.25f));
 	glm::vec3 lightPos = glm::vec3(0, 0, 0);
 
@@ -412,6 +474,10 @@ void renderScene()
 		drawPxObjectTexture(programTex, renderable->context, renderable->modelMatrix, renderable->textureId, 13+i);
 		i += 1;
 	}
+
+
+	//NIE DZIALA !!!!!!!!!!!!!!!!!
+	//drawObjectTextureWithNormals(&pxAsteroid1Model, glm::translate(glm::vec3(-10, 8, 0)) * glm::scale(glm::vec3(1, 0.5, 0.5)), pxAsteroid1Texture, normalAsteroid1);
 
 	//rysowanie slonca
 	glUseProgram(programSun);
@@ -467,7 +533,7 @@ int main(int argc, char ** argv)
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowPosition(200, 200);
 	glutInitWindowSize(600, 600);
-	glutCreateWindow("OpenGL Pierwszy Program");
+	glutCreateWindow("Giera taka, ¿e TOTALNY KOSMOS");
 	glewInit();
 
 	init();
