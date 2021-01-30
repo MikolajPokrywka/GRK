@@ -165,8 +165,8 @@ void initRenderables()
 
 	// load textures
 	pxTexture = Core::LoadTexture("textures/saturn.png");
-	pxTexture2 = Core::LoadTexture("textures/2k_mars.png");
-	pxAsteroid1Texture = Core::LoadTexture("textures/Aster_Small_1_Color.png");
+	pxTexture2 = Core::LoadTexture("textures/asteroid_korekta.png");
+	pxAsteroid1Texture = Core::LoadTexture("textures/asteroid_korekta.png");
 	pxAsteroid6Texture = Core::LoadTexture("textures/asteroid.png");
 	pxSphereContext.initFromOBJ(pxSphereModel);
 	pxShipContext.initFromOBJ(pxShipModel);
