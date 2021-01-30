@@ -44,7 +44,7 @@ Core::RenderContext sphereContext;
 float shipAngle = 0;
 glm::vec3 cameraPos;
 glm::vec3 cameraDir;
-glm::vec3 shipPos = glm::vec3(-30, 0, 0);
+glm::vec3 shipPos = glm::vec3(-20, 0, 0);
 glm::vec3 shipDir;
 queue<glm::mat4> camera_view_matrices_delay;
 
@@ -159,7 +159,7 @@ void initRenderables()
 {
 	// load models
 	pxSphereModel = obj::loadModelFromFile("models/sphere.obj");
-	pxShipModel = obj::loadModelFromFile("models/spaceship.obj");
+	pxShipModel = obj::loadModelFromFile("models/spaceship1.obj");
 	pxAsteroid1Model = obj::loadModelFromFile("models/Asteroid_Small1.obj");
 	pxAsteroid6Model = obj::loadModelFromFile("models/Asteroid_Small6.obj");
 
@@ -455,7 +455,9 @@ void renderScene()
 
 
 	// Utworzenie macierzy statku na podstawie jego pozycji
-	glm::mat4 shipModelMatrix = glm::translate(shipPos + shipDir * 0.5f + glm::vec3(0, -0.25f, 0)) * glm::rotate(-shipAngle + glm::radians(90.0f), glm::vec3(0, 1, 0)) * glm::scale(glm::vec3(0.25f));
+	// TU SIE USTAWIA ODLEGLOSC
+	glm::mat4 shipModelMatrix = glm::translate(shipPos + shipDir * 2.5f + glm::vec3(0, -0.25f, 0)) * glm::rotate(-shipAngle + glm::radians(90.0f), glm::vec3(0, 1, 0)) * glm::scale(glm::vec3(0.25f));
+	//glm::mat4 shipModelMatrix = glm::translate(shipPos + shipDir * 0.5f + glm::vec3(0, -0.25f, 0)) * glm::rotate(-shipAngle + glm::radians(90.0f), glm::vec3(0, 1, 0)) * glm::scale(glm::vec3(0.25f));
 	glm::vec3 lightPos = glm::vec3(0, 0, 0);
 
 
