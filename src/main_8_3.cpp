@@ -357,7 +357,7 @@ glm::mat4 createCameraMatrix()
 	glm::vec3 up = glm::vec3(0, 1, 0);
 
 	// Camera delay
-	while (camera_view_matrices_delay.size() < 100) {
+	while (camera_view_matrices_delay.size() < 50) {
 		camera_view_matrices_delay.push(Core::createViewMatrix(cameraPos, cameraDir, up));
 	}
 
