@@ -143,8 +143,7 @@ PxMaterial* pxMaterial = nullptr;
 std::vector<PxRigidDynamic*> pxBodies;
 GLuint pxTexture, pxTexture2, pxAsteroid1Texture, pxAsteroid6Texture;
 
-// normals
-GLuint normalAsteroid1;
+
 
 obj::Model pxSphereModel;
 obj::Model pxShipModel;
@@ -178,8 +177,7 @@ void initRenderables()
 	pxAsteroid1Context.initFromOBJ(pxAsteroid1Model);
 	pxAsteroid6Context.initFromOBJ(pxAsteroid6Model);
 
-	// load normal mapping textures
-	normalAsteroid1 = Core::LoadTexture("textures/Aster_Small_1_NM.png");
+
 
 
 	Renderable* sphere = new Renderable();
@@ -403,23 +401,6 @@ void setUpUniforms(GLuint program, glm::mat4 modelMatrix)
 	glUniformMatrix4fv(glGetUniformLocation(program, "modelMatrix"), 1, GL_FALSE, (float*)&modelMatrix);
 }
 
-// DUPA TO TEZ NIE
-void drawObjectTextureWithNormals(obj::Model* model, glm::mat4 modelMatrix, GLuint textureId, GLuint normalmapId)
-{
-	GLuint program = programTexture;
-
-	glUseProgram(program);
-
-	setUpUniforms(program, modelMatrix);
-	Core::SetActiveTexture(textureId, "textureSampler", program, 0);
-	// NORMAL MAPPING 8
-	Core::SetActiveTexture(normalmapId, "normalSampler", program, 1);
-
-	Core::DrawModel(model);
-
-	glUseProgram(0);
-}
-
 
 void drawPxObjectTexture(GLuint program, Core::RenderContext *context, glm::mat4 modelMatrix, GLuint id, GLuint normalmapId, int textureUnit)
 {
@@ -498,8 +479,6 @@ void renderScene()
 	}
 
 
-	//NIE DZIALA !!!!!!!!!!!!!!!!!
-	//drawObjectTextureWithNormals(&pxAsteroid1Model, glm::translate(glm::vec3(-10, 8, 0)) * glm::scale(glm::vec3(1, 0.5, 0.5)), pxAsteroid1Texture, normalAsteroid1);
 
 	//rysowanie slonca
 	glUseProgram(programSun);
