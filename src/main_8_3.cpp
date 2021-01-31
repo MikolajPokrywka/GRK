@@ -218,7 +218,7 @@ void initRenderables()
 void initPhysicsScene()
 {
 	//jedna przykladowa planeta
-	sphereBody = pxScene.physics->createRigidDynamic(PxTransform(-20, 0, -1));
+	sphereBody = pxScene.physics->createRigidDynamic(PxTransform(-60, 0, -1));
 	pxMaterial = pxScene.physics->createMaterial(0.5, 0.5, 0.6);
 	PxShape* sphereShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 	sphereBody->attachShape(*sphereShape);
@@ -352,7 +352,7 @@ glm::mat4 createCameraMatrix()
 	glm::vec3 up = glm::vec3(0, 1, 0);
 
 	// Camera delay
-	while (camera_view_matrices_delay.size() < 17) {
+	while (camera_view_matrices_delay.size() < 100) {
 		camera_view_matrices_delay.push(Core::createViewMatrix(cameraPos, cameraDir, up));
 	}
 
@@ -471,6 +471,9 @@ void renderScene()
 	updateTransforms();
 	int i = 0;
 	//renderables[1] to statek
+	glUseProgram(programTex);
+	glUniform3f(glGetUniformLocation(programTex, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+	glUniform3f(glGetUniformLocation(programSun, "cameraPos"), shipPos.x, shipPos.y, shipPos.z);
 	renderables[1]->modelMatrix = shipModelMatrix;
 	for (Renderable* renderable : renderables) {
 		drawPxObjectTexture(programTex, renderable->context, renderable->modelMatrix, renderable->textureId, 13+i);
