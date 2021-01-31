@@ -481,7 +481,19 @@ void renderScene()
 	glUniform3f(glGetUniformLocation(programSun, "cameraPos"), shipPos.x, shipPos.y, shipPos.z);
 	renderables[1]->modelMatrix = shipModelMatrix;
 	for (Renderable* renderable : renderables) {
-		drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureAsteroid2, 13+i);
+
+		if (renderable->textureId == texLoaded) {
+			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureEarth2, 13 + i);
+		}
+		if (renderable->textureId == pxTexture2) {
+			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureShip2, 13 + i);
+		}
+		else {
+			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureAsteroid2, 13 + i);
+		}
+
+
+		
 		i += 1;
 	}
 
@@ -507,6 +519,10 @@ void init()
 
 	programTexture = shaderLoader.CreateProgram("shaders/shader_tex.vert", "shaders/shader_tex.frag");
 
+	texLoaded = Core::LoadTexture("textures/earth.png");
+	texLoadedsaturn = Core::LoadTexture("textures/mercury.png");
+	texLoadedMars = Core::LoadTexture("textures/2k_mars.png");
+	texLoadedSaturn2 = Core::LoadTexture("textures/saturn.png");
 
 	textureShip2 = Core::LoadTexture("textures/spaceship_normals.png");
 	textureEarth2 = Core::LoadTexture("textures/earth2_normals.png");
@@ -514,13 +530,9 @@ void init()
 	textureTest2 = Core::LoadTexture("textures/test_normals.png");
 
 
-
-	programSkybox = shaderLoader.CreateProgram("shaders/shader_skybox.vert", "shaders/shader_skybox.frag");
-	texLoaded = Core::LoadTexture("textures/earth.png");
-	texLoadedsaturn = Core::LoadTexture("textures/mercury.png");
 	texLoadedSkybox = Core::LoadTexture("textures/galaxy.png");
-	texLoadedMars = Core::LoadTexture("textures/2k_mars.png");
-	texLoadedSaturn2 = Core::LoadTexture("textures/saturn.png");
+	programSkybox = shaderLoader.CreateProgram("shaders/shader_skybox.vert", "shaders/shader_skybox.frag");
+
 	sphereModel = obj::loadModelFromFile("models/sphere.obj");
 	shipModel = obj::loadModelFromFile("models/spaceship.obj");
 	shipContext.initFromOBJ(shipModel);
