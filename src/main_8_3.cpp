@@ -24,9 +24,14 @@ GLuint pxProgramColor;
 GLuint pxProgramTexture;
 
 
+GLuint textureTest2;
+GLuint textureEarth2;
+GLuint textureAsteroid2;
+GLuint textureShip2;
+
 GLuint program;
 GLuint programSun;
-GLuint programTex;
+GLuint programTexture;
 GLuint texLoaded;
 GLuint texLoadedsaturn;
 GLuint texLoadedMars, texLoadedSaturn2;
@@ -387,6 +392,7 @@ void drawObjectTexture(GLuint program, Core::RenderContext context, glm::mat4 mo
 
 
 // DUPA NIE DZIALA
+glm::vec3 lightDir = glm::normalize(glm::vec3(1.0f, -1.0f, -1.0f));
 void setUpUniforms(GLuint program, glm::mat4 modelMatrix)
 {
 	//glUniform3f(glGetUniformLocation(program, "lightDir"), lightDir.x, lightDir.y, lightDir.z);
@@ -400,7 +406,7 @@ void setUpUniforms(GLuint program, glm::mat4 modelMatrix)
 // DUPA TO TEZ NIE
 void drawObjectTextureWithNormals(obj::Model* model, glm::mat4 modelMatrix, GLuint textureId, GLuint normalmapId)
 {
-	GLuint program = programTex;
+	GLuint program = programTexture;
 
 	glUseProgram(program);
 
@@ -415,14 +421,13 @@ void drawObjectTextureWithNormals(obj::Model* model, glm::mat4 modelMatrix, GLui
 }
 
 
-void drawPxObjectTexture(GLuint program, Core::RenderContext *context, glm::mat4 modelMatrix, GLuint id, int textureUnit)
+void drawPxObjectTexture(GLuint program, Core::RenderContext *context, glm::mat4 modelMatrix, GLuint id, GLuint normalmapId, int textureUnit)
 {
-	Core::SetActiveTexture(id, "colorTexture", program, textureUnit);
-	//glUniform3f(glGetUniformLocation(program, "colorTexture"), Core::SetActiveTexture(),);
+	glUseProgram(program);
 
-	glm::mat4 transformation = perspectiveMatrix * cameraMatrix * modelMatrix;
-	glUniformMatrix4fv(glGetUniformLocation(program, "modelMatrix"), 1, GL_FALSE, (float*)&modelMatrix);
-	glUniformMatrix4fv(glGetUniformLocation(program, "transformation"), 1, GL_FALSE, (float*)&transformation);
+	setUpUniforms(program, modelMatrix);
+	Core::SetActiveTexture(id, "textureSampler", program, 0);
+	Core::SetActiveTexture(normalmapId, "normalSampler", program, 1);
 
 	Core::DrawContext(*context);
 }
@@ -471,12 +476,12 @@ void renderScene()
 	updateTransforms();
 	int i = 0;
 	//renderables[1] to statek
-	glUseProgram(programTex);
-	glUniform3f(glGetUniformLocation(programTex, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+	glUseProgram(programTexture);
+	glUniform3f(glGetUniformLocation(programTexture, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 	glUniform3f(glGetUniformLocation(programSun, "cameraPos"), shipPos.x, shipPos.y, shipPos.z);
 	renderables[1]->modelMatrix = shipModelMatrix;
 	for (Renderable* renderable : renderables) {
-		drawPxObjectTexture(programTex, renderable->context, renderable->modelMatrix, renderable->textureId, 13+i);
+		drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureAsteroid2, 13+i);
 		i += 1;
 	}
 
@@ -487,7 +492,7 @@ void renderScene()
 	//rysowanie slonca
 	glUseProgram(programSun);
 	glUniform3f(glGetUniformLocation(programSun, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
-	glUniform3f(glGetUniformLocation(programSun, "shipPos"), shipPos.x, shipPos.y, shipPos.z);
+	glUniform3f(glGetUniformLocation(programSun, "cameraPos"), shipPos.x, shipPos.y, shipPos.z);
 	drawObject(programSun, sphereContext, glm::translate(lightPos)  *glm::scale(glm::vec3(5.0f)), glm::vec3(1.0f, 0.8f, 0.2f));
 
 	glUseProgram(0);
@@ -498,12 +503,17 @@ void init()
 {
 	srand(time(0));
 	glEnable(GL_DEPTH_TEST);
-	program = shaderLoader.CreateProgram("shaders/shader_4_1.vert", "shaders/shader_4_1.frag");
 	programSun = shaderLoader.CreateProgram("shaders/shader_4_2.vert", "shaders/shader_4_2.frag");
-	programTex = shaderLoader.CreateProgram("shaders/shader_4_tex.vert", "shaders/shader_4_tex.frag");
-	programProc = shaderLoader.CreateProgram("shaders/shader_proc_tex.vert", "shaders/shader_proc_tex.frag");
 
-	pxProgramColor = shaderLoader.CreateProgram("shaders/shader_color.vert", "shaders/shader_color.frag");
+	programTexture = shaderLoader.CreateProgram("shaders/shader_tex.vert", "shaders/shader_tex.frag");
+
+
+	textureShip2 = Core::LoadTexture("textures/spaceship_normals.png");
+	textureEarth2 = Core::LoadTexture("textures/earth2_normals.png");
+	textureAsteroid2 = Core::LoadTexture("textures/asteroid_normals.png");
+	textureTest2 = Core::LoadTexture("textures/test_normals.png");
+
+
 
 	programSkybox = shaderLoader.CreateProgram("shaders/shader_skybox.vert", "shaders/shader_skybox.frag");
 	texLoaded = Core::LoadTexture("textures/earth.png");
@@ -525,6 +535,7 @@ void shutdown()
 	shaderLoader.DeleteProgram(program);
 	pxSphereContext.initFromOBJ(pxSphereModel);
 	pxShipContext.initFromOBJ(pxShipModel);
+	shaderLoader.DeleteProgram(programTexture);
 }
 
 void idle()
