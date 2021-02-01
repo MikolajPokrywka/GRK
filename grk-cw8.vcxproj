@@ -22,6 +22,7 @@
     <ClCompile Include="src\SOIL\SOIL.c" />
     <ClCompile Include="src\SOIL\stb_image_aug.c" />
     <ClCompile Include="src\Texture.cpp" />
+    <ClCompile Include="test_main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Camera.h" />
@@ -42,6 +43,7 @@
     <None Include="shaders\shader_skybox.frag" />
     <None Include="shaders\shader_skybox.vert" />
     <None Include="shaders\shader_tex.frag" />
+    <None Include="shaders\shader_tex.geom" />
     <None Include="shaders\shader_tex.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

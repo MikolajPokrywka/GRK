@@ -20,8 +20,8 @@ namespace Core
 
 		Shader_Loader(void);
 		~Shader_Loader(void);
-		GLuint CreateProgram(char* VertexShaderFilename,
-			char* FragmentShaderFilename);
+		GLuint CreateProgram(char* VertexShaderFilename, 
+			char* FragmentShaderFilename, char* geometryShaderFilename = nullptr);
 
 		void DeleteProgram(GLuint program);
 

@@ -32,6 +32,7 @@ GLuint textureShip2;
 GLuint program;
 GLuint programSun;
 GLuint programTexture;
+GLuint programTextureExplosion;
 GLuint texLoaded;
 GLuint texLoadedsaturn;
 GLuint texLoadedMars, texLoadedSaturn2;
@@ -254,7 +255,6 @@ void initPhysicsScene()
 		PxRigidDynamic *boxBody_buffor2 = pxScene.physics->createRigidDynamic(PxTransform(-10 *j+100, 10* j, -1));
 		PxShape* boxShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 		boxBody_buffor2->attachShape(*boxShape);
-		boxShape->release();
 		boxBody_buffor2->userData = renderables[j + 3];
 		boxBody_buffor2->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 		pxScene.scene->addActor(*boxBody_buffor2);
@@ -389,7 +389,7 @@ void drawObjectTexture(GLuint program, Core::RenderContext context, glm::mat4 mo
 }
 
 
-// DUPA NIE DZIALA
+// !!!!
 glm::vec3 lightDir = glm::normalize(glm::vec3(1.0f, -1.0f, -1.0f));
 void setUpUniforms(GLuint program, glm::mat4 modelMatrix)
 {
@@ -460,11 +460,15 @@ void renderScene()
 	glUseProgram(programTexture);
 	glUniform3f(glGetUniformLocation(programTexture, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 	glUniform3f(glGetUniformLocation(programSun, "cameraPos"), shipPos.x, shipPos.y, shipPos.z);
+	
+
 	renderables[1]->modelMatrix = shipModelMatrix;
 	for (Renderable* renderable : renderables) {
 
 		if (renderable->textureId == texLoaded) {
-			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureEarth2, 13 + i);
+			glUseProgram(programTextureExplosion);
+			glUniform1f(glGetUniformLocation(programTextureExplosion, "time"), time);
+			drawPxObjectTexture(programTextureExplosion, renderable->context, renderable->modelMatrix, renderable->textureId, textureEarth2, 13 + i);
 		}
 		if (renderable->textureId == pxTexture2) {
 			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureShip2, 13 + i);
@@ -497,6 +501,7 @@ void init()
 	programSun = shaderLoader.CreateProgram("shaders/shader_4_2.vert", "shaders/shader_4_2.frag");
 
 	programTexture = shaderLoader.CreateProgram("shaders/shader_tex.vert", "shaders/shader_tex.frag");
+	programTextureExplosion = shaderLoader.CreateProgram("shaders/shader_tex.vert", "shaders/shader_tex.frag", "shaders/shader_tex.geom");
 
 	texLoaded = Core::LoadTexture("textures/earth.png");
 	texLoadedsaturn = Core::LoadTexture("textures/mercury.png");
@@ -526,6 +531,8 @@ void shutdown()
 	shaderLoader.DeleteProgram(program);
 	pxSphereContext.initFromOBJ(pxSphereModel);
 	pxShipContext.initFromOBJ(pxShipModel);
+	pxAsteroid1Context.initFromOBJ(pxAsteroid1Model);
+	pxAsteroid6Context.initFromOBJ(pxAsteroid6Model);
 	shaderLoader.DeleteProgram(programTexture);
 }
 

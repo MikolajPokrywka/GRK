@@ -11,11 +11,21 @@ uniform mat4 modelMatrix;
 
 uniform vec3 lightDir;
 uniform vec3 cameraPos;
+uniform float time;
+
 
 out vec2 interpTexCoord;
 
 out vec3 lightDirTs;
-out vec3 viewDirTS ;
+out vec3 viewDirTS;
+
+out VS_OUT
+{
+    vec3 v_Normal;
+    vec2 v_TexCoord;
+    vec3 v_FragPos;
+} vs_out;
+
 
 void main()
 {
@@ -34,4 +44,7 @@ void main()
 	gl_Position = modelViewProjectionMatrix * vec4(vertexPosition, 1.0);
 
 	interpTexCoord = vertexTexCoord;
+	vs_out.v_Normal = normalize(mat3(transpose(inverse(modelMatrix))) * vertexNormal);
+	vs_out.v_TexCoord = vertexTexCoord;
+	vs_out.v_FragPos = vec3(modelMatrix * vec4(vertexPosition, 1.0));
 }

@@ -54,6 +54,9 @@
     <ClCompile Include="src\Box.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\SOIL\image_DXT.h">
@@ -107,6 +110,9 @@
       <Filter>Shader Files</Filter>
     </None>
     <None Include="shaders\shader_4_2.vert">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shader_tex.geom">
       <Filter>Shader Files</Filter>
     </None>
   </ItemGroup>
