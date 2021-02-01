@@ -466,9 +466,9 @@ void renderScene()
 	for (Renderable* renderable : renderables) {
 
 		if (renderable->textureId == texLoaded) {
-			glUseProgram(programTextureExplosion);
+			//glUseProgram(programTextureExplosion);
 			glUniform1f(glGetUniformLocation(programTextureExplosion, "time"), time);
-			drawPxObjectTexture(programTextureExplosion, renderable->context, renderable->modelMatrix, renderable->textureId, textureEarth2, 13 + i);
+			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureEarth2, 13 + i);
 		}
 		if (renderable->textureId == pxTexture2) {
 			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureShip2, 13 + i);
