@@ -1,8 +1,16 @@
 #include "Camera.h"
 
-glm::mat4 Core::createPerspectiveMatrix(float zNear, float zFar)
+glm::mat4 Core::createPerspectiveMatrix(float zNear, float zFar, float frustumScale)
 {
-    return glm::perspectiveFovRH(glm::radians(80.f), 1.f, 1.f, zNear, zFar);
+	glm::mat4 perspective;
+	perspective[0][0] = 1.f;
+	perspective[1][1] = frustumScale;
+	perspective[2][2] = (zFar + zNear) / (zNear - zFar);
+	perspective[3][2] = (2 * zFar * zNear) / (zNear - zFar);
+	perspective[2][3] = -1;
+	perspective[3][3] = 0;
+
+	return perspective;
 }
 
 glm::mat4 Core::createViewMatrix( glm::vec3 position, glm::vec3 forward, glm::vec3 up )
@@ -23,10 +31,4 @@ glm::mat4 Core::createViewMatrix( glm::vec3 position, glm::vec3 forward, glm::ve
 	return cameraRotation * cameraTranslation;
 }
 
-glm::mat4 Core::createViewMatrixQuat(glm::vec3 position, glm::quat rotation)
-{
-	glm::mat4 cameraTranslation;
-	cameraTranslation[3] = glm::vec4(-position, 1.0f);
 
-	return glm::mat4_cast(rotation) * cameraTranslation;
-}

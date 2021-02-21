@@ -19,15 +19,18 @@ PxRigidDynamic* sphereBody = nullptr;
 PxRigidDynamic* shipBody = nullptr;
 PxRigidDynamic *shipBody_buffor = nullptr;
 PxRigidDynamic *pxSunBody = nullptr;
+PxRigidDynamic *pxBulletBody = nullptr;
 int textureArrayLength = 4;
 GLuint pxProgramColor;
 GLuint pxProgramTexture;
 
+bool isBulletVisible = true;
 
 GLuint textureTest2;
 GLuint textureEarth2;
 GLuint textureAsteroid2;
 GLuint textureShip2;
+GLuint sandTexture;
 
 GLuint program;
 GLuint programSun;
@@ -154,10 +157,17 @@ Core::RenderContext pxSphereContext;
 Core::RenderContext pxShipContext;
 Core::RenderContext pxAsteroid1Context;
 Core::RenderContext pxAsteroid6Context;
+float frustumScale = 1.f;
+void onReshape(int width, int height)
+{
+	frustumScale = (float)width / height;
+
+	glViewport(0, 0, width, height);
+}
 
 
-
-
+glm::mat4 shipModelMatrix;
+glm::mat4 bulletModelMatrix;
 
 
 void initRenderables()
@@ -173,6 +183,7 @@ void initRenderables()
 	pxTexture2 = Core::LoadTexture("textures/asteroid_korekta.png");
 	pxAsteroid1Texture = Core::LoadTexture("textures/asteroid_korekta.png");
 	pxAsteroid6Texture = Core::LoadTexture("textures/asteroid.png");
+	sandTexture = Core::LoadTexture("textures/sand.jpg");
 	pxSphereContext.initFromOBJ(pxSphereModel);
 	pxShipContext.initFromOBJ(pxShipModel);
 	pxAsteroid1Context.initFromOBJ(pxAsteroid1Model);
@@ -216,6 +227,10 @@ void initRenderables()
 		renderables.emplace_back(box);
 	}
 
+	Renderable* bullet = new Renderable();
+	bullet->context = &pxSphereContext;
+	bullet->textureId = sandTexture;
+	renderables.emplace_back(bullet);
 
 }
 
@@ -260,6 +275,15 @@ void initPhysicsScene()
 		pxScene.scene->addActor(*boxBody_buffor2);
 		pxBodies.push_back(boxBody_buffor2);
 	}
+
+	pxBulletBody = pxScene.physics->createRigidDynamic(PxTransform(-17, 0, 0));
+	PxShape* bulletShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
+	pxBulletBody->attachShape(*bulletShape);
+	pxBulletBody->setLinearVelocity(PxVec3(0, 0.1, 0));
+	bulletShape->release();
+	pxBulletBody->userData = renderables[textureArrayLength+3];
+	//pxBulletBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+	pxScene.scene->addActor(*pxBulletBody);
 
 
 	//shipBody = pxScene.physics->createRigidDynamic(PxTransform(-25, -2, 0));
@@ -317,11 +341,20 @@ void updateTransforms()
 				c1.x, c1.y, c1.z, c1.w,
 				c2.x, c2.y, c2.z, c2.w,
 				c3.x, c3.y, c3.z, c3.w)
-				* elemTranslate * glm::rotate(time/2, glm::vec3(0, 1, 0));
+				* elemTranslate * glm::rotate(time / 2, glm::vec3(0, 1, 0));
+		
 		}		
 		shipBody_buffor->setKinematicTarget(PxTransform(shipPos.x, shipPos.y, shipPos.z));
-		sphereBody->setKinematicTarget(PxTransform(-7 * sin(time), -7*cos(time), -7 * cos(time)));
+		//sphereBody->setKinematicTarget(PxTransform(-7 * sin(time), -7*cos(time), -7 * cos(time)));
+		//pxBulletBody->setKinematicTarget(PxTransform(shipPos.x +3+ time/10, 0, 0));
 	}
+}
+
+void shoot() {
+	cout << "saaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaas";
+
+	bulletModelMatrix = shipModelMatrix;
+	//pxBulletBody->setLinearVelocity(PxVec3(0, 1, 0));
 }
 
 
@@ -339,6 +372,7 @@ void keyboard(unsigned char key, int x, int y)
 	case 'a': shipPos -= glm::cross(shipDir, glm::vec3(0, 1, 0)) * moveSpeed; break;
 	case 'e': shipPos += glm::cross(shipDir, glm::vec3(1, 0, 0)) * moveSpeed; break;
 	case 'q': shipPos -= glm::cross(shipDir, glm::vec3(1, 0, 0)) * moveSpeed; break;
+	case 'k': shoot(); break;
 	}
 }
 
@@ -441,7 +475,7 @@ void renderScene()
 	}
 
 	cameraMatrix = createCameraMatrix();
-	perspectiveMatrix = Core::createPerspectiveMatrix();
+	perspectiveMatrix = Core::createPerspectiveMatrix(0.1f, 100.f, frustumScale);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.0f, 0.3f, 0.3f, 1.0f);
 
@@ -449,8 +483,8 @@ void renderScene()
 
 	// Utworzenie macierzy statku na podstawie jego pozycji
 	// TU SIE USTAWIA ODLEGLOSC
-	glm::mat4 shipModelMatrix = glm::translate(shipPos + shipDir * 2.5f + glm::vec3(0, -0.25f, 0)) * glm::rotate(-shipAngle + glm::radians(90.0f), glm::vec3(0, 1, 0)) * glm::scale(glm::vec3(0.25f));
-	//glm::mat4 shipModelMatrix = glm::translate(shipPos + shipDir * 0.5f + glm::vec3(0, -0.25f, 0)) * glm::rotate(-shipAngle + glm::radians(90.0f), glm::vec3(0, 1, 0)) * glm::scale(glm::vec3(0.25f));
+	glm::translate(shipPos + shipDir * 2.5f + glm::vec3(0, -0.25f, 0)) * glm::rotate(-shipAngle + glm::radians(90.0f), glm::vec3(0, 1, 0)) * glm::scale(glm::vec3(0.25f));
+	shipModelMatrix = glm::translate(shipPos + shipDir * 0.5f + glm::vec3(0, -0.25f, 0)) * glm::rotate(-shipAngle + glm::radians(90.0f), glm::vec3(0, 1, 0)) * glm::scale(glm::vec3(0.25f));
 	glm::vec3 lightPos = glm::vec3(0, 0, 0);
 
 
@@ -468,6 +502,7 @@ void renderScene()
 	
 
 	renderables[1]->modelMatrix = shipModelMatrix;
+	renderables[textureArrayLength + 3]->modelMatrix = bulletModelMatrix * glm::translate(glm::vec3(0, 0, 0));;
 	for (Renderable* renderable : renderables) {
 
 		//if (renderable->textureId == texLoaded) {
@@ -481,7 +516,13 @@ void renderScene()
 		//else {
 		//	drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureAsteroid2, 13 + i);
 		//}
-		drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureTest2, 13 + i);
+		if (renderable->textureId == sandTexture && isBulletVisible) {
+			
+			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureShip2, 13 + i);
+		}
+		else {
+			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureTest2, 13 + i);
+		}
 
 		
 		i += 1;
@@ -517,7 +558,6 @@ void init()
 	textureEarth2 = Core::LoadTexture("textures/earth2_normals.png");
 	textureAsteroid2 = Core::LoadTexture("textures/asteroid_normals.png");
 	textureTest2 = Core::LoadTexture("textures/test_normals.png");
-
 
 	texLoadedSkybox = Core::LoadTexture("textures/galaxy.png");
 	programSkybox = shaderLoader.CreateProgram("shaders/shader_skybox.vert", "shaders/shader_skybox.frag");
