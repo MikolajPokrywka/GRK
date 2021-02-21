@@ -14,11 +14,10 @@ uniform vec3 cameraPos;
 uniform float time;
 
 
-out vec2 interpTexCoord;
-
 out vec3 lightDirTs;
 out vec3 viewDirTS;
 
+out vec2 interpTexCoord;
 out VS_OUT
 {
     vec3 v_Normal;

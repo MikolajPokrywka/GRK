@@ -164,7 +164,7 @@ void initRenderables()
 {
 	// load models
 	pxSphereModel = obj::loadModelFromFile("models/sphere.obj");
-	pxShipModel = obj::loadModelFromFile("models/spaceship1.obj");
+	pxShipModel = obj::loadModelFromFile("models/spaceship.obj");
 	pxAsteroid1Model = obj::loadModelFromFile("models/Asteroid_Small1.obj");
 	pxAsteroid6Model = obj::loadModelFromFile("models/Asteroid_Small6.obj");
 
@@ -252,11 +252,11 @@ void initPhysicsScene()
 
 
 	for (int j = 0;j < textureArrayLength;j++) {
-		PxRigidDynamic *boxBody_buffor2 = pxScene.physics->createRigidDynamic(PxTransform(-10 *j+100, 10* j, -1));
+		PxRigidDynamic *boxBody_buffor2 = pxScene.physics->createRigidDynamic(PxTransform(-j*2 -3, j, -j *2 - 3));
 		PxShape* boxShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 		boxBody_buffor2->attachShape(*boxShape);
 		boxBody_buffor2->userData = renderables[j + 3];
-		boxBody_buffor2->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+		//boxBody_buffor2->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 		pxScene.scene->addActor(*boxBody_buffor2);
 		pxBodies.push_back(boxBody_buffor2);
 	}
@@ -284,6 +284,7 @@ void updateTransforms()
 
 		std::vector<PxRigidActor*> actors(nbActors);
 		pxScene.scene->getActors(actorFlags, (PxActor**)&actors[0], nbActors);
+		int i = 0;
 		for (auto actor : actors)
 		{
 			// We use the userData of the objects to set up the model matrices
@@ -299,29 +300,27 @@ void updateTransforms()
 			auto &c3 = transform.column3;
 
 			// set up the model matrix used for the rendering
+			glm::mat4 elemTranslate;
+			if (i % 2 == 0) {
+				//TUTAJ ASTEROIDY - ta zakomentowana linia do testów
+				//pxBodies[i]->setKinematicTarget(PxTransform(-14, 0, i*2));
+
+				elemTranslate = glm::translate(glm::vec3((i * 2 + 10) * cos((time + 2 * i) / 10), 0, (i * 2 + 10) * sin((time + 2 * i) / 10)));
+			}
+			else {
+				elemTranslate = glm::translate(glm::vec3((i * 2 + 10) * -cos((time + 2 * i) / 10), 0, (i * 2 + 10) * -sin((time + 2 * i) / 10)));
+			}
+
+			i++;
 			renderable->modelMatrix = glm::mat4(
 				c0.x, c0.y, c0.z, c0.w,
 				c1.x, c1.y, c1.z, c1.w,
 				c2.x, c2.y, c2.z, c2.w,
 				c3.x, c3.y, c3.z, c3.w)
-				* glm::rotate(time/2, glm::vec3(0, 1, 0));
-		}
-
-
-		
+				* elemTranslate * glm::rotate(time/2, glm::vec3(0, 1, 0));
+		}		
 		shipBody_buffor->setKinematicTarget(PxTransform(shipPos.x, shipPos.y, shipPos.z));
 		sphereBody->setKinematicTarget(PxTransform(-7 * sin(time), -7*cos(time), -7 * cos(time)));
-
-		for (int i = 0; i < textureArrayLength;i++) {
-			if (i % 2 == 0) {
-				//TUTAJ ASTEROIDY - ta zakomentowana linia do testów
-				//pxBodies[i]->setKinematicTarget(PxTransform(-14, 0, i*2));
-				pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10) * cos((time + 2 * i) / 10), 0, (i * 4 + 10) * sin((time + 2 * i) / 10)));
-			}
-			else {
-				pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10)* -cos((time + 2 * i) / 10), 0, (i * 4 + 10)* -sin((time + 2 * i) / 10)));
-			}
-		};
 	}
 }
 
@@ -391,6 +390,7 @@ void drawObjectTexture(GLuint program, Core::RenderContext context, glm::mat4 mo
 
 // !!!!
 glm::vec3 lightDir = glm::normalize(glm::vec3(1.0f, -1.0f, -1.0f));
+
 void setUpUniforms(GLuint program, glm::mat4 modelMatrix)
 {
 	glUniform3f(glGetUniformLocation(program, "lightDir"), lightDir.x, lightDir.y, lightDir.z);
@@ -411,6 +411,7 @@ void drawPxObjectTexture(GLuint program, Core::RenderContext *context, glm::mat4
 	Core::SetActiveTexture(normalmapId, "normalSampler", program, 1);
 
 	Core::DrawContext(*context);
+	glUseProgram(0);
 }
 
 void renderScene()
@@ -422,6 +423,12 @@ void renderScene()
 	static double prevTime = time;
 	double dtime = time - prevTime;
 	prevTime = time;
+
+	bool animateLight = false;
+	if (animateLight) {
+		float lightAngle = (glutGet(GLUT_ELAPSED_TIME) / 1000.0f) * 3.14 / 8;
+		lightDir = glm::normalize(glm::vec3(sin(lightAngle), -1.0f, cos(lightAngle)));
+	}
 
 	// Update physics
 	if (dtime < 1.f) {
@@ -457,26 +464,24 @@ void renderScene()
 	updateTransforms();
 	int i = 0;
 	//renderables[1] to statek
-	glUseProgram(programTexture);
-	glUniform3f(glGetUniformLocation(programTexture, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
-	glUniform3f(glGetUniformLocation(programSun, "cameraPos"), shipPos.x, shipPos.y, shipPos.z);
+	
 	
 
 	renderables[1]->modelMatrix = shipModelMatrix;
 	for (Renderable* renderable : renderables) {
 
-		if (renderable->textureId == texLoaded) {
-			//glUseProgram(programTextureExplosion);
-			glUniform1f(glGetUniformLocation(programTextureExplosion, "time"), time);
-			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureEarth2, 13 + i);
-		}
-		if (renderable->textureId == pxTexture2) {
-			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureShip2, 13 + i);
-		}
-		else {
-			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureAsteroid2, 13 + i);
-		}
-
+		//if (renderable->textureId == texLoaded) {
+		//	//glUseProgram(programTextureExplosion);
+		//	glUniform1f(glGetUniformLocation(programTextureExplosion, "time"), time);
+		//	drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureEarth2, 13 + i);
+		//}
+		//if (renderable->textureId == pxTexture2) {
+		//	drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureShip2, 13 + i);
+		//}
+		//else {
+		//	drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureAsteroid2, 13 + i);
+		//}
+		drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureTest2, 13 + i);
 
 		
 		i += 1;
