@@ -502,7 +502,7 @@ void renderScene()
 	
 
 	renderables[1]->modelMatrix = shipModelMatrix;
-	renderables[textureArrayLength + 3]->modelMatrix = bulletModelMatrix * glm::translate(glm::vec3(0, 0, 0));;
+	renderables[textureArrayLength + 3]->modelMatrix = bulletModelMatrix * glm::translate(glm::vec3(0, 0, -10+ 1.9*time));;
 	for (Renderable* renderable : renderables) {
 
 		//if (renderable->textureId == texLoaded) {
