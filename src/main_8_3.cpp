@@ -235,12 +235,6 @@ void initRenderables()
 		renderables.emplace_back(box);
 	}
 
-	Renderable* bullet = new Renderable();
-	bullet->context = &pxSphereContext;
-	bullet->textureId = texLoadedSaturn2;
-	bullet->textureId2 = textureTest2;
-	renderables.emplace_back(bullet);
-
 }
 
 void initPhysicsScene()
@@ -342,12 +336,19 @@ void updateTransforms()
 }
 
 void shoot() {
+	Renderable* bullet = new Renderable();
+	bullet->context = &pxSphereContext;
+	bullet->textureId = texLoadedSaturn2;
+	bullet->textureId2 = textureTest2;
+	bullet->modelMatrix = bullet->modelMatrix * glm::scale(glm::vec3(0.01f));
+	renderables.emplace_back(bullet);
+
 	pxBulletBody = pxScene.physics->createRigidDynamic(PxTransform(shipPos.x+ shipDir.x, shipPos.y + shipDir.y, shipPos.z+ shipDir.z));
 	PxShape* bulletShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 	pxBulletBody->attachShape(*bulletShape);
 	pxBulletBody->setLinearVelocity(PxVec3(shipDir.x, shipDir.y, shipDir.z)*50);
 	bulletShape->release();
-	pxBulletBody->userData = renderables[textureArrayLength + 3];
+	pxBulletBody->userData = renderables.back();
 	//pxBulletBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 	pxScene.scene->addActor(*pxBulletBody);
 }
@@ -512,7 +513,7 @@ void renderScene()
 	
 
 	renderables[1]->modelMatrix = shipModelMatrix;
-	renderables[textureArrayLength+3]->modelMatrix = renderables[textureArrayLength + 3]->modelMatrix * glm::scale(glm::vec3(0.1f));
+	//renderables[textureArrayLength+3]->modelMatrix = renderables[textureArrayLength + 3]->modelMatrix * glm::scale(glm::vec3(0.1f));
 	//renderables[textureArrayLength + 3]->modelMatrix = bulletModelMatrix * glm::translate(glm::vec3(0, 0, -10+ 1.9*time));;
 	for (Renderable* renderable : renderables) {
 		drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, renderable->textureId2, 13 + i);
