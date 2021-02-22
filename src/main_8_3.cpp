@@ -271,7 +271,7 @@ void initPhysicsScene()
 		PxShape* boxShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 		boxBody_buffor2->attachShape(*boxShape);
 		boxBody_buffor2->userData = renderables[j + 3];
-		//boxBody_buffor2->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+		boxBody_buffor2->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 		pxScene.scene->addActor(*boxBody_buffor2);
 		pxBodies.push_back(boxBody_buffor2);
 	}
@@ -279,7 +279,7 @@ void initPhysicsScene()
 	pxBulletBody = pxScene.physics->createRigidDynamic(PxTransform(-17, 0, 0));
 	PxShape* bulletShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 	pxBulletBody->attachShape(*bulletShape);
-	pxBulletBody->setLinearVelocity(PxVec3(0, 0.1, 0));
+	//pxBulletBody->setLinearVelocity(PxVec3(0, 0.1, 0));
 	bulletShape->release();
 	pxBulletBody->userData = renderables[textureArrayLength+3];
 	//pxBulletBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
@@ -325,23 +325,14 @@ void updateTransforms()
 
 			// set up the model matrix used for the rendering
 			glm::mat4 elemTranslate;
-			if (i % 2 == 0) {
-				//TUTAJ ASTEROIDY - ta zakomentowana linia do testów
-				//pxBodies[i]->setKinematicTarget(PxTransform(-14, 0, i*2));
-
-				elemTranslate = glm::translate(glm::vec3((i * 2 + 10) * cos((time + 2 * i) / 10), 0, (i * 2 + 10) * sin((time + 2 * i) / 10)));
-			}
-			else {
-				elemTranslate = glm::translate(glm::vec3((i * 2 + 10) * -cos((time + 2 * i) / 10), 0, (i * 2 + 10) * -sin((time + 2 * i) / 10)));
-			}
+			
 
 			i++;
 			renderable->modelMatrix = glm::mat4(
 				c0.x, c0.y, c0.z, c0.w,
 				c1.x, c1.y, c1.z, c1.w,
 				c2.x, c2.y, c2.z, c2.w,
-				c3.x, c3.y, c3.z, c3.w)
-				* elemTranslate * glm::rotate(time / 2, glm::vec3(0, 1, 0));
+				c3.x, c3.y, c3.z, c3.w);// *glm::rotate(time / 2, glm::vec3(0, 1, 0));
 		
 		}		
 		
@@ -421,11 +412,13 @@ void drawObjectTexture(GLuint program, Core::RenderContext context, glm::mat4 mo
 
 
 // !!!!
-glm::vec3 lightDir = glm::normalize(glm::vec3(1.0f, -1.0f, -1.0f));
+glm::vec3 lightPos1 = glm::vec3(0, 0, 0);
+glm::vec3 lightPos2 = glm::vec3(50, 10, 50);
 
 void setUpUniforms(GLuint program, glm::mat4 modelMatrix)
 {
-	glUniform3f(glGetUniformLocation(program, "lightDir"), lightDir.x, lightDir.y, lightDir.z);
+	glUniform3f(glGetUniformLocation(program, "lightPos1"), lightPos1.x, lightPos1.y, lightPos1.z);
+	glUniform3f(glGetUniformLocation(program, "lightPos2"), lightPos2.x, lightPos2.y, lightPos2.z);
 	glUniform3f(glGetUniformLocation(program, "cameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);
 
 	glm::mat4 transformation = perspectiveMatrix * cameraMatrix * modelMatrix;
@@ -456,11 +449,11 @@ void renderScene()
 	double dtime = time - prevTime;
 	prevTime = time;
 
-	bool animateLight = false;
-	if (animateLight) {
-		float lightAngle = (glutGet(GLUT_ELAPSED_TIME) / 1000.0f) * 3.14 / 8;
-		lightDir = glm::normalize(glm::vec3(sin(lightAngle), -1.0f, cos(lightAngle)));
-	}
+	//bool animateLight = false;
+	//if (animateLight) {
+	//	float lightAngle = (glutGet(GLUT_ELAPSED_TIME) / 1000.0f) * 3.14 / 8;
+	//	lightDir = glm::normalize(glm::vec3(sin(lightAngle), -1.0f, cos(lightAngle)));
+	//}
 
 	// Update physics
 	if (dtime < 1.f) {
@@ -483,7 +476,6 @@ void renderScene()
 	// TU SIE USTAWIA ODLEGLOSC
 	glm::translate(shipPos + shipDir * 2.5f + glm::vec3(0, -0.25f, 0)) * glm::rotate(-shipAngle + glm::radians(90.0f), glm::vec3(0, 1, 0)) * glm::scale(glm::vec3(0.25f));
 	shipModelMatrix = glm::translate(shipPos + shipDir * 0.5f + glm::vec3(0, -0.25f, 0)) * glm::rotate(-shipAngle + glm::radians(90.0f), glm::vec3(0, 1, 0)) * glm::scale(glm::vec3(0.25f));
-	glm::vec3 lightPos = glm::vec3(0, 0, 0);
 
 
 	//SKYBOX
@@ -494,7 +486,18 @@ void renderScene()
 
 	//fizyczne obiekty 
 	shipBody_buffor->setKinematicTarget(PxTransform(shipPos.x, shipPos.y, shipPos.z));
-	//sphereBody->setKinematicTarget(PxTransform(-7 * sin(time), -7*cos(time), -7 * cos(time)));
+	sphereBody->setKinematicTarget(PxTransform(-7 * sin(time), -7*cos(time), -7 * cos(time)));
+	for (int i = 0; i < textureArrayLength; i++) {
+		if (i % 2 == 0) {
+			//TUTAJ ASTEROIDY - ta zakomentowana linia do testów
+			//pxBodies[i]->setKinematicTarget(PxTransform(-14, 0, i*2));
+			pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10) * cos((time + 2 * i) / 10), 0, (i * 4 + 10) * sin((time + 2 * i) / 10)));
+		}
+		else {
+			pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10) * -cos((time + 2 * i) / 10), 0, (i * 4 + 10) * -sin((time + 2 * i) / 10)));
+		}
+	};
+
 	//pxBulletBody->setKinematicTarget(PxTransform(shipPos.x +3+ time/10, 0, 0));
 	updateTransforms();
 	int i = 0;
@@ -533,9 +536,14 @@ void renderScene()
 
 	//rysowanie slonca
 	glUseProgram(programSun);
-	glUniform3f(glGetUniformLocation(programSun, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+	glUniform3f(glGetUniformLocation(programSun, "lightPos"), lightPos1.x, lightPos1.y, lightPos1.z);
 	glUniform3f(glGetUniformLocation(programSun, "cameraPos"), shipPos.x, shipPos.y, shipPos.z);
-	drawObject(programSun, sphereContext, glm::translate(lightPos)  *glm::scale(glm::vec3(5.0f)), glm::vec3(1.0f, 0.8f, 0.2f));
+	drawObject(programSun, sphereContext, glm::translate(lightPos1)  *glm::scale(glm::vec3(5.0f)), glm::vec3(1.0f, 0.8f, 0.2f));
+
+	glUseProgram(programSun);
+	glUniform3f(glGetUniformLocation(programSun, "lightPos"), lightPos2.x, lightPos2.y, lightPos2.z);
+	glUniform3f(glGetUniformLocation(programSun, "cameraPos"), shipPos.x, shipPos.y, shipPos.z);
+	drawObject(programSun, sphereContext, glm::translate(lightPos2) * glm::scale(glm::vec3(10.0f)), glm::vec3(1.0f, 0.8f, 0.2f));
 
 	glUseProgram(0);
 	glutSwapBuffers();

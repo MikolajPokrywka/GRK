@@ -9,12 +9,14 @@ layout(location = 4) in vec3 vertexBitangent;
 uniform mat4 modelViewProjectionMatrix;
 uniform mat4 modelMatrix;
 
-uniform vec3 lightDir;
+uniform vec3 lightPos1;
+uniform vec3 lightPos2;
 uniform vec3 cameraPos;
 uniform float time;
 
 
 out vec3 lightDirTs;
+out vec3 lightDir2Ts;
 out vec3 viewDirTS;
 
 out vec2 interpTexCoord;
@@ -31,6 +33,8 @@ void main()
 //dla swiatla punktowaego wyliczamy lighdir jako normalize(vertPos-lightPos)
 	vec3 vertPos;
 	vertPos = (modelMatrix * vec4(vertexPosition, 1.0)).xyz;
+	vec3 lightDir = normalize(vertPos - lightPos1);
+	vec3 lightDir2 = normalize(vertPos - lightPos2);
 
 	vec3 normal = vec3(modelMatrix * vec4(vertexNormal, 0.0));
 	vec3 tangent = vec3(modelMatrix * vec4(vertexTangent, 0.0));
@@ -39,6 +43,7 @@ void main()
 	mat3 TBN = transpose(mat3(tangent, bitangent, normal));
 	vec3 viewDir = normalize(cameraPos - vertPos);
 	lightDirTs = TBN * lightDir;
+	lightDir2Ts = TBN * lightDir2;
 	viewDirTS = TBN * viewDir;
 	//interpNormal = (modelMatrix * vec4(vertexNormal, 0.0)).xyz;
 	gl_Position = modelViewProjectionMatrix * vec4(vertexPosition, 1.0);
