@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #include <map>
 #include <set>
 #include <vector>
+#include "glm.hpp"
 
 namespace obj {
 
@@ -39,6 +40,8 @@ struct Model {
     std::vector<float> vertex; //< 3 * N entries
     std::vector<float> texCoord; //< 2 * N entries
     std::vector<float> normal; //< 3 * N entries
+    std::vector<float> tangent; //< 3 * N entries
+    std::vector<float> bitangent; //< 3 * N entries
     
     std::map<std::string, std::vector<unsigned short> > faces; //< assume triangels and uniform indexing
 };
@@ -227,6 +230,65 @@ Model convertToModel( const ObjModel & obj ) {
             const unsigned short index = std::distance(unique.begin(), std::lower_bound(unique.begin(), unique.end(), *f));
             v.push_back(index);
         }
+    }
+    // compute tangents
+    auto &indices = model.faces["default"];
+    model.tangent.resize(model.normal.size(), 0.f);
+    model.bitangent.resize(model.normal.size(), 0.f);
+    for (int i = 0; i < (int)indices.size(); i += 3)
+    {
+        auto &i0 = indices[i], &i1 = indices[i + 1], &i2 = indices[i + 2];
+        glm::vec3 v0(model.vertex[3*i0 + 0], model.vertex[3*i0 + 1], model.vertex[3*i0 + 2]);
+        glm::vec3 v1(model.vertex[3*i1 + 0], model.vertex[3*i1 + 1], model.vertex[3*i1 + 2]);
+        glm::vec3 v2(model.vertex[3*i2 + 0], model.vertex[3*i2 + 1], model.vertex[3*i2 + 2]);
+
+        glm::vec2 uv0(model.texCoord[2*i0 + 0], model.texCoord[2*i0 + 1]);
+        glm::vec2 uv1(model.texCoord[2*i1 + 0], model.texCoord[2*i1 + 1]);
+        glm::vec2 uv2(model.texCoord[2*i2 + 0], model.texCoord[2*i2 + 1]);
+
+        glm::vec3 deltaPos1 = v1 - v0;
+        glm::vec3 deltaPos2 = v2 - v0;
+
+        glm::vec2 deltaUV1 = uv1 - uv0;
+        glm::vec2 deltaUV2 = uv2 - uv0;
+         
+        float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+        glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y)*r;
+        glm::vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x)*r;
+
+        for (int j = 0; j < 3; j++)
+        {
+            model.tangent[3 * i0 + j] += tangent[j];
+            model.tangent[3 * i1 + j] += tangent[j];
+            model.tangent[3 * i2 + j] += tangent[j];
+
+            model.bitangent[3 * i0 + j] += bitangent[j];
+            model.bitangent[3 * i1 + j] += bitangent[j];
+            model.bitangent[3 * i2 + j] += bitangent[j];
+        }
+    }
+    for (auto &i : indices)
+    {
+        auto &tx = model.tangent[3 * i + 0];
+        auto &ty = model.tangent[3 * i + 1];
+        auto &tz = model.tangent[3 * i + 2];
+
+        auto &bx = model.bitangent[3 * i + 0];
+        auto &by = model.bitangent[3 * i + 1];
+        auto &bz = model.bitangent[3 * i + 2];
+
+        glm::vec3 n(model.normal[3 * i + 0], model.normal[3 * i + 1], model.normal[3 * i + 2]);
+        auto t = glm::normalize(glm::vec3(tx, ty, tz));
+        auto b = glm::normalize(glm::vec3(bx, by, bz));
+        
+        t = glm::normalize(t - n * glm::dot(n, t));
+
+        if (glm::dot(glm::cross(n, t), b) < 0.0f) {
+            t = -t;
+        }
+
+        tx = t.x, ty = t.y, tz = t.z;
+        bx = b.x, by = b.y, bz = b.z;
     }
     return model;
 }

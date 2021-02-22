@@ -26,6 +26,7 @@ void main()
 	vec3 color = texture2D(textureSampler, interpTexCoord).rgb;
 	vec3 lightColor = vec3(1);
 
+	//diffuse dodac, lighcolor dwa i * specular i dodac
 	vec3 shadedColor = color * diffuse + lightColor * specular;
 	
 	float ambient = 0.2;

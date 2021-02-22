@@ -15,6 +15,9 @@ void Core::RenderContext::initFromOBJ(obj::Model& model)
     unsigned int vertexNormalBufferSize = sizeof(float) * model.normal.size();
     unsigned int vertexTexBufferSize = sizeof(float) * model.texCoord.size();
 
+    unsigned int vertexTangentBufferSize = sizeof(float) * model.tangent.size();
+    unsigned int vertexBitangentBufferSize = sizeof(float) * model.bitangent.size();
+
     size = model.faces["default"].size();
     unsigned int vertexElementBufferSize = sizeof(unsigned short) * size;
 
@@ -33,8 +36,12 @@ void Core::RenderContext::initFromOBJ(obj::Model& model)
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
+
+    //czy tutaj tez powiniem dodac
+    glEnableVertexAttribArray(3);
+    glEnableVertexAttribArray(4);
     
-    glBufferData(GL_ARRAY_BUFFER, vertexDataBufferSize + vertexNormalBufferSize + vertexTexBufferSize, NULL, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertexDataBufferSize + vertexNormalBufferSize + vertexTexBufferSize + vertexTangentBufferSize + vertexBitangentBufferSize, NULL, GL_STATIC_DRAW);
 
     glBufferSubData(GL_ARRAY_BUFFER, 0, vertexDataBufferSize, &model.vertex[0]);
 
@@ -42,9 +49,23 @@ void Core::RenderContext::initFromOBJ(obj::Model& model)
 
     glBufferSubData(GL_ARRAY_BUFFER, vertexDataBufferSize + vertexNormalBufferSize, vertexTexBufferSize, &model.texCoord[0]);
 
+    //analogicznie przekazac dane w subData
+    glBufferSubData(GL_ARRAY_BUFFER, vertexDataBufferSize + vertexNormalBufferSize + vertexTexBufferSize, vertexTangentBufferSize, &model.tangent[0]);
+
+    glBufferSubData(GL_ARRAY_BUFFER, vertexDataBufferSize + vertexNormalBufferSize + vertexTexBufferSize + vertexTangentBufferSize, vertexBitangentBufferSize, &model.bitangent[0]);
+
+    //layout(location = 0) in vec3 vertexPosition;
+  /*  layout(location = 1) in vec2 vertexTexCoord;
+    layout(location = 2) in vec3 vertexNormal;
+    layout(location = 3) in vec3 vertexTangent;
+    layout(location = 4) in vec3 vertexBitangent;*/
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)(0));
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)(vertexDataBufferSize));
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(vertexNormalBufferSize + vertexDataBufferSize));
+
+    //analogicznie podpiac tangenty i bitangenty
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, (void*)(vertexDataBufferSize + vertexNormalBufferSize + vertexTexBufferSize));
+    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 0, (void*)(vertexDataBufferSize + vertexNormalBufferSize + vertexTexBufferSize + vertexTangentBufferSize));
 }
 
 void Core::DrawVertexArray(const float * vertexArray, int numVertices, int elementSize )

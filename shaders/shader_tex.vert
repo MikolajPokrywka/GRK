@@ -28,6 +28,7 @@ out VS_OUT
 
 void main()
 {
+//dla swiatla punktowaego wyliczamy lighdir jako normalize(vertPos-lightPos)
 	vec3 vertPos;
 	vertPos = (modelMatrix * vec4(vertexPosition, 1.0)).xyz;
 

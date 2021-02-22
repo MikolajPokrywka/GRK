@@ -344,17 +344,15 @@ void updateTransforms()
 				* elemTranslate * glm::rotate(time / 2, glm::vec3(0, 1, 0));
 		
 		}		
-		shipBody_buffor->setKinematicTarget(PxTransform(shipPos.x, shipPos.y, shipPos.z));
-		//sphereBody->setKinematicTarget(PxTransform(-7 * sin(time), -7*cos(time), -7 * cos(time)));
-		//pxBulletBody->setKinematicTarget(PxTransform(shipPos.x +3+ time/10, 0, 0));
+		
 	}
 }
 
 void shoot() {
 	cout << "saaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaas";
 
-	bulletModelMatrix = shipModelMatrix;
-	//pxBulletBody->setLinearVelocity(PxVec3(0, 1, 0));
+	//renderables[14]->modelMatrix = shipModelMatrix;
+	pxBulletBody->setLinearVelocity(PxVec3(0, 1, 0));
 }
 
 
@@ -495,6 +493,9 @@ void renderScene()
 	glDepthMask(GL_TRUE);
 
 	//fizyczne obiekty 
+	shipBody_buffor->setKinematicTarget(PxTransform(shipPos.x, shipPos.y, shipPos.z));
+	//sphereBody->setKinematicTarget(PxTransform(-7 * sin(time), -7*cos(time), -7 * cos(time)));
+	//pxBulletBody->setKinematicTarget(PxTransform(shipPos.x +3+ time/10, 0, 0));
 	updateTransforms();
 	int i = 0;
 	//renderables[1] to statek
@@ -502,27 +503,27 @@ void renderScene()
 	
 
 	renderables[1]->modelMatrix = shipModelMatrix;
-	renderables[textureArrayLength + 3]->modelMatrix = bulletModelMatrix * glm::translate(glm::vec3(0, 0, -10+ 1.9*time));;
+	//renderables[textureArrayLength + 3]->modelMatrix = bulletModelMatrix * glm::translate(glm::vec3(0, 0, -10+ 1.9*time));;
 	for (Renderable* renderable : renderables) {
 
-		//if (renderable->textureId == texLoaded) {
-		//	//glUseProgram(programTextureExplosion);
-		//	glUniform1f(glGetUniformLocation(programTextureExplosion, "time"), time);
-		//	drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureEarth2, 13 + i);
-		//}
-		//if (renderable->textureId == pxTexture2) {
-		//	drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureShip2, 13 + i);
-		//}
-		//else {
-		//	drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureAsteroid2, 13 + i);
-		//}
-		if (renderable->textureId == sandTexture && isBulletVisible) {
+		if (renderable->textureId == texLoaded) {
+			//glUseProgram(programTextureExplosion);
+			glUniform1f(glGetUniformLocation(programTextureExplosion, "time"), time);
+			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureEarth2, 13 + i);
+		}
+		if (renderable->textureId == pxTexture2) {
+			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureShip2, 13 + i);
+		}
+		else {
+			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureAsteroid2, 13 + i);
+		}
+		/*if (renderable->textureId == sandTexture && isBulletVisible) {
 			
 			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureShip2, 13 + i);
 		}
 		else {
 			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureTest2, 13 + i);
-		}
+		}*/
 
 		
 		i += 1;
