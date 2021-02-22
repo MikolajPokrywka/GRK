@@ -140,6 +140,7 @@ struct Renderable {
 	Core::RenderContext* context;
 	glm::mat4 modelMatrix;
 	GLuint textureId;
+	GLuint textureId2;
 };
 std::vector<Renderable*> renderables;
 
@@ -195,41 +196,49 @@ void initRenderables()
 	Renderable* sphere = new Renderable();
 	sphere->context = &pxSphereContext;
 	sphere->textureId = pxTexture;
+	sphere->textureId2 = textureEarth2;
 	renderables.emplace_back(sphere);
 
 	Renderable* ship = new Renderable();
 	ship->context = &pxShipContext;
 	ship->textureId = pxTexture2;
+	ship->textureId2 = textureShip2;
 	renderables.emplace_back(ship);
 
 	Renderable* sun = new Renderable();
 	sun->context = &pxSphereContext;
 	sun->textureId = texLoaded;
+	sun->textureId2 = textureTest2;
 	renderables.emplace_back(sun);
 
 	Renderable* asteroid1 = new Renderable();
 	asteroid1->context = &pxAsteroid1Context;
 	asteroid1->textureId = pxAsteroid1Texture;
+	asteroid1->textureId2 = textureAsteroid2;
 	renderables.emplace_back(asteroid1);
 
 	Renderable* asteroid6 = new Renderable();
 	asteroid6->context = &pxAsteroid6Context;
 	asteroid6->textureId = pxAsteroid6Texture;
+	asteroid6->textureId2 = textureAsteroid2;
 	renderables.emplace_back(asteroid6);
 
 	
 	const GLuint textures[50] = { texLoaded, texLoadedsaturn, texLoadedMars, texLoadedSaturn2 };
+	const GLuint textures2[50] = { textureEarth2, textureAsteroid2, textureAsteroid2, textureAsteroid2 };
 	for (int j = 0; j < textureArrayLength; j++) {
 		// create box
 		Renderable* box = new Renderable();
 		box->context = &pxSphereContext;
 		box->textureId = textures[j];
+		box->textureId2 = textures2[j];
 		renderables.emplace_back(box);
 	}
 
 	Renderable* bullet = new Renderable();
 	bullet->context = &pxSphereContext;
 	bullet->textureId = sandTexture;
+	bullet->textureId2 = textureTest2;
 	renderables.emplace_back(bullet);
 
 }
@@ -505,28 +514,8 @@ void renderScene()
 	renderables[1]->modelMatrix = shipModelMatrix;
 	//renderables[textureArrayLength + 3]->modelMatrix = bulletModelMatrix * glm::translate(glm::vec3(0, 0, -10+ 1.9*time));;
 	for (Renderable* renderable : renderables) {
-
-		if (renderable->textureId == texLoaded) {
-			//glUseProgram(programTextureExplosion);
-			glUniform1f(glGetUniformLocation(programTextureExplosion, "time"), time);
-			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureEarth2, 13 + i);
-		}
-		if (renderable->textureId == pxTexture2) {
-			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureShip2, 13 + i);
-		}
-		else {
-			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureAsteroid2, 13 + i);
-		}
-		/*if (renderable->textureId == sandTexture && isBulletVisible) {
-			
-			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureShip2, 13 + i);
-		}
-		else {
-			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, textureTest2, 13 + i);
-		}*/
-
-		
-		i += 1;
+		drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, renderable->textureId2, 13 + i);
+		i++;
 	}
 
 
