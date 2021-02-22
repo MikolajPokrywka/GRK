@@ -237,7 +237,7 @@ void initRenderables()
 
 	Renderable* bullet = new Renderable();
 	bullet->context = &pxSphereContext;
-	bullet->textureId = sandTexture;
+	bullet->textureId = texLoadedSaturn2;
 	bullet->textureId2 = textureTest2;
 	renderables.emplace_back(bullet);
 
@@ -512,6 +512,7 @@ void renderScene()
 	
 
 	renderables[1]->modelMatrix = shipModelMatrix;
+	renderables[textureArrayLength+3]->modelMatrix = renderables[textureArrayLength + 3]->modelMatrix * glm::scale(glm::vec3(0.1f));
 	//renderables[textureArrayLength + 3]->modelMatrix = bulletModelMatrix * glm::translate(glm::vec3(0, 0, -10+ 1.9*time));;
 	for (Renderable* renderable : renderables) {
 		drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, renderable->textureId2, 13 + i);
