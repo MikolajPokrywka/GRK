@@ -276,14 +276,7 @@ void initPhysicsScene()
 		pxBodies.push_back(boxBody_buffor2);
 	}
 
-	pxBulletBody = pxScene.physics->createRigidDynamic(PxTransform(-17, 0, 0));
-	PxShape* bulletShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
-	pxBulletBody->attachShape(*bulletShape);
-	//pxBulletBody->setLinearVelocity(PxVec3(0, 0.1, 0));
-	bulletShape->release();
-	pxBulletBody->userData = renderables[textureArrayLength+3];
-	//pxBulletBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
-	pxScene.scene->addActor(*pxBulletBody);
+	
 
 
 	//shipBody = pxScene.physics->createRigidDynamic(PxTransform(-25, -2, 0));
@@ -332,7 +325,7 @@ void updateTransforms()
 				c0.x, c0.y, c0.z, c0.w,
 				c1.x, c1.y, c1.z, c1.w,
 				c2.x, c2.y, c2.z, c2.w,
-				c3.x, c3.y, c3.z, c3.w);// *glm::rotate(time / 2, glm::vec3(0, 1, 0));
+				c3.x, c3.y, c3.z, c3.w) *glm::rotate(time / 2, glm::vec3(0, 1, 0));
 		
 		}		
 		
@@ -340,10 +333,14 @@ void updateTransforms()
 }
 
 void shoot() {
-	cout << "saaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaas";
-
-	//renderables[14]->modelMatrix = shipModelMatrix;
-	pxBulletBody->setLinearVelocity(PxVec3(0, 1, 0));
+	pxBulletBody = pxScene.physics->createRigidDynamic(PxTransform(shipPos.x+ shipDir.x, shipPos.y + shipDir.y, shipPos.z+ shipDir.z));
+	PxShape* bulletShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
+	pxBulletBody->attachShape(*bulletShape);
+	pxBulletBody->setLinearVelocity(PxVec3(shipDir.x, shipDir.y, shipDir.z)*50);
+	bulletShape->release();
+	pxBulletBody->userData = renderables[textureArrayLength + 3];
+	//pxBulletBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+	pxScene.scene->addActor(*pxBulletBody);
 }
 
 
