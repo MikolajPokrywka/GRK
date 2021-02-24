@@ -59,6 +59,18 @@ queue<glm::mat4> camera_view_matrices_delay;
 
 glm::mat4 cameraMatrix, perspectiveMatrix;
 
+std::vector<PxRigidDynamic*> pxBodies;
+
+struct Renderable {
+	Core::RenderContext* context;
+	glm::mat4 modelMatrix;
+	GLuint textureId;
+	GLuint textureId2;
+	bool exploded = false;
+};
+std::vector<Renderable*> renderables;
+
+
 // contact pairs filtering function
 static PxFilterFlags simulationFilterShader(PxFilterObjectAttributes attributes0,
 	PxFilterData filterData0, PxFilterObjectAttributes attributes1, PxFilterData filterData1,
@@ -76,15 +88,11 @@ static PxFilterFlags simulationFilterShader(PxFilterObjectAttributes attributes0
 class SimulationEventCallback : public PxSimulationEventCallback
 {
 public:
-	void onContact(const PxContactPairHeader& pairHeader,
-		const PxContactPair* pairs, PxU32 nbPairs)
-	{
+	void onContact(const PxContactPairHeader& pairHeader, const PxContactPair* pairs, PxU32 nbPairs) {
 		// HINT: You can check which actors are in contact
 		// using pairHeader.actors[0] and pairHeader.actors[1]
 		
-			cout << "nbPairs: ";
-			cout << nbPairs;
-			cout << "\n";
+			cout << "nbPairs: " << nbPairs << "\n";
 			for (PxU32 i = 0; i < nbPairs; i++)
 			{
 				const PxContactPair& cp = pairs[i];
@@ -109,12 +117,19 @@ public:
 				nbContacts;
 				for (int j = 0; j < nbContacts;j++) {
 					cout << "Positions: ";
-					cout << pairPoints[j].position.x;
-					cout << " ";
-					cout << pairPoints[j].position.y;
-					cout << " ";
-					cout << pairPoints[j].position.z;
-					cout << "\n";
+					cout << pairPoints[j].position.x << " ";
+					cout << pairPoints[j].position.y << " ";
+					cout << pairPoints[j].position.z << "\n";
+					cout << pairHeader.actors[0] << "   " << pairHeader.actors[1] << "\n\n";
+					//pairHeader.actors[0]->exploded = true;
+					//pxScene.scene->removeActors(pairHeader.actors, nbContacts);
+				}
+				for (int i = 0; i <= textureArrayLength; i++) {
+					if (pairHeader.actors[0] == pxBodies[i] || pairHeader.actors[1] == pxBodies[i]) {
+						cout << "MAMY TOO\n\n";
+						renderables[i + 2]->exploded = true;
+						cout << i << "   " << renderables[i + 3] << "   " << pxBodies[i] << "\n\n";
+					}
 				}
 		}
 	}
@@ -136,16 +151,9 @@ Physics pxScene(0, simulationFilterShader,
 const double physicsStepTime = 1.f / 60.f;
 double physicsTimeToProcess = 0;
 
-struct Renderable {
-	Core::RenderContext* context;
-	glm::mat4 modelMatrix;
-	GLuint textureId;
-	GLuint textureId2;
-};
-std::vector<Renderable*> renderables;
+
 
 PxMaterial* pxMaterial = nullptr;
-std::vector<PxRigidDynamic*> pxBodies;
 GLuint pxTexture, pxTexture2, pxAsteroid1Texture, pxAsteroid6Texture;
 
 
@@ -193,11 +201,7 @@ void initRenderables()
 
 
 
-	Renderable* sphere = new Renderable();
-	sphere->context = &pxSphereContext;
-	sphere->textureId = pxTexture;
-	sphere->textureId2 = textureEarth2;
-	renderables.emplace_back(sphere);
+	
 
 	Renderable* ship = new Renderable();
 	ship->context = &pxShipContext;
@@ -210,6 +214,12 @@ void initRenderables()
 	sun->textureId = texLoaded;
 	sun->textureId2 = textureTest2;
 	renderables.emplace_back(sun);
+
+	Renderable* sphere = new Renderable();
+	sphere->context = &pxSphereContext;
+	sphere->textureId = pxTexture;
+	sphere->textureId2 = textureEarth2;
+	renderables.emplace_back(sphere);
 
 	Renderable* asteroid1 = new Renderable();
 	asteroid1->context = &pxAsteroid1Context;
@@ -246,16 +256,18 @@ void initPhysicsScene()
 	sphereBody->attachShape(*sphereShape);
 	//sphereBody->setLinearVelocity(PxVec3(cos(time*20), 0, sin(time * 20)));
 	sphereShape->release();
-	sphereBody->userData = renderables[0];
+	sphereBody->userData = renderables[2];
 	sphereBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 	pxScene.scene->addActor(*sphereBody);
+	pxBodies.push_back(sphereBody);
+
 
 	//statek
 	shipBody_buffor = pxScene.physics->createRigidDynamic(PxTransform(shipPos.x, shipPos.y, shipPos.z));
 	PxShape* boxShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 	shipBody_buffor->attachShape(*boxShape);
 	boxShape->release();
-	shipBody_buffor->userData = renderables[1];
+	shipBody_buffor->userData = renderables[0];
 	shipBody_buffor->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 	pxScene.scene->addActor(*shipBody_buffor);
 
@@ -264,9 +276,10 @@ void initPhysicsScene()
 	PxShape* sunShape = pxScene.physics->createShape(PxSphereGeometry(5), *pxMaterial);
 	pxSunBody->attachShape(*sunShape);
 	sunShape->release();
-	pxSunBody->userData = renderables[2];
+	pxSunBody->userData = renderables[1];
 	//boxBody_buffor->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 	pxScene.scene->addActor(*pxSunBody);
+	cout << pxSunBody;
 
 
 	for (int j = 0;j < textureArrayLength;j++) {
@@ -278,7 +291,7 @@ void initPhysicsScene()
 		pxScene.scene->addActor(*boxBody_buffor2);
 		pxBodies.push_back(boxBody_buffor2);
 	}
-
+	
 	
 
 
@@ -434,9 +447,10 @@ void setUpUniforms(GLuint program, glm::mat4 modelMatrix)
 }
 
 
-void drawPxObjectTexture(GLuint program, Core::RenderContext *context, glm::mat4 modelMatrix, GLuint id, GLuint normalmapId, int textureUnit)
+void drawPxObjectTexture(GLuint program, Core::RenderContext *context, glm::mat4 modelMatrix, GLuint id, GLuint normalmapId, int textureUnit, float time = 0.0f)
 {
 	glUseProgram(program);
+	glUniform1f(glGetUniformLocation(programTextureExplosion, "time"), time);
 
 	setUpUniforms(program, modelMatrix);
 	Core::SetActiveTexture(id, "textureSampler", program, 0);
@@ -445,6 +459,8 @@ void drawPxObjectTexture(GLuint program, Core::RenderContext *context, glm::mat4
 	Core::DrawContext(*context);
 	glUseProgram(0);
 }
+
+
 
 void renderScene()
 {
@@ -491,14 +507,15 @@ void renderScene()
 	drawObjectTexture(programSkybox, sphereContext, glm::translate(shipPos + shipDir * 0.5f) * glm::scale(glm::vec3(70.f)), texLoadedSkybox, 5);
 	glDepthMask(GL_TRUE);
 
-	//fizyczne obiekty 
+	//fizyczne obiekty
 	shipBody_buffor->setKinematicTarget(PxTransform(shipPos.x, shipPos.y, shipPos.z));
-	sphereBody->setKinematicTarget(PxTransform(-7 * sin(time), -7*cos(time), -7 * cos(time)));
-	for (int i = 0; i < textureArrayLength; i++) {
+	// pierwszym elementem w pxBodies jest ksiê¿yc s³oñca, poruszaj¹cy siê w innej p³aszczyznie ni¿ ni¿ reszta komet i planet
+	pxBodies[0]->setKinematicTarget(PxTransform(-7 * sin(time), -7*cos(time), -7 * cos(time)));
+	for (int i = 1; i <= textureArrayLength; i++) {
 		if (i % 2 == 0) {
 			//TUTAJ ASTEROIDY - ta zakomentowana linia do testów
-			//pxBodies[i]->setKinematicTarget(PxTransform(-14, 0, i*2));
-			pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10) * cos((time + 2 * i) / 10), 0, (i * 4 + 10) * sin((time + 2 * i) / 10)));
+			pxBodies[i]->setKinematicTarget(PxTransform(-14, 0, i*2));
+			//pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10) * cos((time + 2 * i) / 10), 0, (i * 4 + 10) * sin((time + 2 * i) / 10)));
 		}
 		else {
 			pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10) * -cos((time + 2 * i) / 10), 0, (i * 4 + 10) * -sin((time + 2 * i) / 10)));
@@ -512,11 +529,21 @@ void renderScene()
 	
 	
 
-	renderables[1]->modelMatrix = shipModelMatrix;
+	renderables[0]->modelMatrix = shipModelMatrix;
 	//renderables[textureArrayLength+3]->modelMatrix = renderables[textureArrayLength + 3]->modelMatrix * glm::scale(glm::vec3(0.1f));
 	//renderables[textureArrayLength + 3]->modelMatrix = bulletModelMatrix * glm::translate(glm::vec3(0, 0, -10+ 1.9*time));;
 	for (Renderable* renderable : renderables) {
-		drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, renderable->textureId2, 13 + i);
+		//cout << renderable;
+		// sprawdzam czy obiekt zosta³ zestrzeloney i ma wybuchnaæ
+		if (renderable->exploded == true) {
+			glUniform1f(glGetUniformLocation(programTextureExplosion, "time"), time);
+			drawPxObjectTexture(programTextureExplosion, renderable->context, renderable->modelMatrix, renderable->textureId, renderable->textureId2, 13 + i, time);
+		}
+		else {
+			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, renderable->textureId2, 13 + i);
+
+		}
+		
 		i++;
 	}
 
