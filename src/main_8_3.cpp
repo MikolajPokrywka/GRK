@@ -593,7 +593,7 @@ void renderScene()
 		ParticlesContainer[particleIndex].particleDir = -shipDir;
 		ParticlesContainer[particleIndex].pos = shipPos - glm::vec3(0,0.25f,0) + shipDir/2.f;
 
-		float spread = 2.f;
+		float spread = 2.5f;
 		//glm::vec3 maindir = glm::vec3(0.0f, 10.0f, 0.0f);
 		// Very bad way to generate a random direction; 
 		// See for instance http://stackoverflow.com/questions/5408276/python-uniform-spherical-distribution instead,
