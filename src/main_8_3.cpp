@@ -72,6 +72,7 @@ struct Particle {
 	float size, angle, weight;
 	float life; // Remaining life of the particle. if <0 : dead and unused.
 	float cameradistance; // *Squared* distance to the camera. if dead : -1.0f
+	glm::vec3 particleDir;
 };
 
 const int MaxParticles = 100000;
@@ -589,9 +590,10 @@ void renderScene()
 	for (int i = 0; i < newparticles; i++) {
 		int particleIndex = FindUnusedParticle();
 		ParticlesContainer[particleIndex].life = 5.0f; // This particle will live 5 seconds.
-		ParticlesContainer[particleIndex].pos = shipPos;
+		ParticlesContainer[particleIndex].particleDir = -shipDir;
+		ParticlesContainer[particleIndex].pos = shipPos - glm::vec3(0,0.25f,0) + shipDir/2.f;
 
-		float spread = 0.5f;
+		float spread = 2.f;
 		//glm::vec3 maindir = glm::vec3(0.0f, 10.0f, 0.0f);
 		// Very bad way to generate a random direction; 
 		// See for instance http://stackoverflow.com/questions/5408276/python-uniform-spherical-distribution instead,
@@ -607,9 +609,9 @@ void renderScene()
 
 
 		// Very bad way to generate a random color
-		ParticlesContainer[particleIndex].r = rand() % 256;
+		ParticlesContainer[particleIndex].r = 255;
 		ParticlesContainer[particleIndex].g = rand() % 256;
-		ParticlesContainer[particleIndex].b = rand() % 256;
+		ParticlesContainer[particleIndex].b = 0;
 		ParticlesContainer[particleIndex].a = (rand() % 256) / 3;
 
 		ParticlesContainer[particleIndex].size = (rand() % 100) / 2000.0f + 0.1f;
@@ -630,7 +632,7 @@ void renderScene()
 			if (p.life > 0.0f) {
 
 				// Simulate simple physics : gravity only, no collisions
-				p.speed += -shipDir * (float)dtime * 0.2f;
+				p.speed += p.particleDir * (float)dtime * 0.2f;
 				p.pos += p.speed * (float)dtime;
 				p.cameradistance = glm::length2(p.pos - cameraPos);
 				//ParticlesContainer[i].pos += glm::vec3(0.0f,10.0f, 0.0f) * (float)delta;
