@@ -128,10 +128,10 @@ void Core::ParticleContext::initParticle(GLuint programID, const int MaxPart, GL
     glBindVertexArray(VertexArrayID);
 
     GLfloat g_vertex_buffer_data[] = {
-         -0.5f, -0.5f, 0.0f,
-          0.5f, -0.5f, 0.0f,
-         -0.5f,  0.5f, 0.0f,
-          0.5f,  0.5f, 0.0f,
+         -0.05f, -0.05f, 0.0f,
+          0.05f, -0.05f, 0.0f,
+         -0.05f,  0.05f, 0.0f,
+          0.05f,  0.05f, 0.0f,
     };
 
     glGenBuffers(1, &billboard_vertex_buffer);

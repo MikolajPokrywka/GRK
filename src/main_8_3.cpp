@@ -589,20 +589,21 @@ void renderScene()
 	for (int i = 0; i < newparticles; i++) {
 		int particleIndex = FindUnusedParticle();
 		ParticlesContainer[particleIndex].life = 5.0f; // This particle will live 5 seconds.
-		ParticlesContainer[particleIndex].pos = glm::vec3(0, 0, -20.0f);
+		ParticlesContainer[particleIndex].pos = shipPos;
 
-		float spread = 1.5f;
-		glm::vec3 maindir = glm::vec3(0.0f, 10.0f, 0.0f);
+		float spread = 0.5f;
+		//glm::vec3 maindir = glm::vec3(0.0f, 10.0f, 0.0f);
 		// Very bad way to generate a random direction; 
 		// See for instance http://stackoverflow.com/questions/5408276/python-uniform-spherical-distribution instead,
 		// combined with some user-controlled parameters (main direction, spread, etc)
+		
 		glm::vec3 randomdir = glm::vec3(
-			(rand() % 2000 - 1000.0f) / 1000.0f,
-			(rand() % 2000 - 1000.0f) / 1000.0f,
-			(rand() % 2000 - 1000.0f) / 1000.0f
+			(rand() % 200 - 100.0f) / 1000.0f,
+			(rand() % 200 - 100.0f) / 1000.0f,
+			(rand() % 200 - 100.0f) / 1000.0f
 		);
 
-		ParticlesContainer[particleIndex].speed = maindir + randomdir * spread;
+		ParticlesContainer[particleIndex].speed = (-shipDir + randomdir * spread) / 10.f;
 
 
 		// Very bad way to generate a random color
@@ -611,7 +612,7 @@ void renderScene()
 		ParticlesContainer[particleIndex].b = rand() % 256;
 		ParticlesContainer[particleIndex].a = (rand() % 256) / 3;
 
-		ParticlesContainer[particleIndex].size = (rand() % 1000) / 2000.0f + 0.1f;
+		ParticlesContainer[particleIndex].size = (rand() % 100) / 2000.0f + 0.1f;
 	}
 
 
@@ -629,7 +630,7 @@ void renderScene()
 			if (p.life > 0.0f) {
 
 				// Simulate simple physics : gravity only, no collisions
-				p.speed += glm::vec3(0.0f, -9.81f, 0.0f) * (float)dtime * 0.5f;
+				p.speed += -shipDir * (float)dtime * 0.2f;
 				p.pos += p.speed * (float)dtime;
 				p.cameradistance = glm::length2(p.pos - cameraPos);
 				//ParticlesContainer[i].pos += glm::vec3(0.0f,10.0f, 0.0f) * (float)delta;
