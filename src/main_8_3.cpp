@@ -26,6 +26,7 @@ GLuint pxProgramTexture;
 
 bool isBulletVisible = true;
 
+
 GLuint textureTest2;
 GLuint textureEarth2;
 GLuint textureAsteroid2;
@@ -60,6 +61,7 @@ queue<glm::mat4> camera_view_matrices_delay;
 glm::mat4 cameraMatrix, perspectiveMatrix;
 
 std::vector<PxRigidDynamic*> pxBodies;
+std::vector<PxRigidDynamic*> hitActors;
 
 struct Renderable {
 	Core::RenderContext* context;
@@ -67,6 +69,7 @@ struct Renderable {
 	GLuint textureId;
 	GLuint textureId2;
 	bool exploded = false;
+	float explosionProgress = 0.0f;
 };
 std::vector<Renderable*> renderables;
 
@@ -121,14 +124,13 @@ public:
 					cout << pairPoints[j].position.y << " ";
 					cout << pairPoints[j].position.z << "\n";
 					cout << pairHeader.actors[0] << "   " << pairHeader.actors[1] << "\n\n";
-					//pairHeader.actors[0]->exploded = true;
-					//pxScene.scene->removeActors(pairHeader.actors, nbContacts);
+					
 				}
 				for (int i = 0; i <= textureArrayLength; i++) {
+					// szukam ktory z obiektow pxBodies bierze udzial w kontakcie
 					if (pairHeader.actors[0] == pxBodies[i] || pairHeader.actors[1] == pxBodies[i]) {
-						cout << "MAMY TOO\n\n";
 						renderables[i + 2]->exploded = true;
-						cout << i << "   " << renderables[i + 3] << "   " << pxBodies[i] << "\n\n";
+						hitActors.emplace_back(pxBodies[i]);
 					}
 				}
 		}
@@ -146,6 +148,10 @@ public:
 SimulationEventCallback simulationEventCallback;
 Physics pxScene(0, simulationFilterShader,
 	&simulationEventCallback);
+
+//void t(Physics xScene, PxRigidDynamic* actor) {
+//	xScene.scene->removeActor(*actor);
+//}
 
 // fixed timestep for stable and deterministic simulation
 const double physicsStepTime = 1.f / 60.f;
@@ -201,8 +207,6 @@ void initRenderables()
 
 
 
-	
-
 	Renderable* ship = new Renderable();
 	ship->context = &pxShipContext;
 	ship->textureId = pxTexture2;
@@ -251,7 +255,7 @@ void initPhysicsScene()
 {
 	//jedna przykladowa planeta
 	sphereBody = pxScene.physics->createRigidDynamic(PxTransform(-60, 0, -1));
-	pxMaterial = pxScene.physics->createMaterial(0.5, 0.5, 0.6);
+	pxMaterial = pxScene.physics->createMaterial(0.5, 10.5, 0.6);
 	PxShape* sphereShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 	sphereBody->attachShape(*sphereShape);
 	//sphereBody->setLinearVelocity(PxVec3(cos(time*20), 0, sin(time * 20)));
@@ -285,6 +289,7 @@ void initPhysicsScene()
 	for (int j = 0;j < textureArrayLength;j++) {
 		PxRigidDynamic *boxBody_buffor2 = pxScene.physics->createRigidDynamic(PxTransform(-j*2 -3, j, -j *2 - 3));
 		PxShape* boxShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
+		// za pomoca attachShape() przypisuje siê kszta³t, który reaguje na kontakt i odpowiada za fizykê
 		boxBody_buffor2->attachShape(*boxShape);
 		boxBody_buffor2->userData = renderables[j + 3];
 		boxBody_buffor2->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
@@ -386,7 +391,7 @@ void keyboard(unsigned char key, int x, int y)
 }
 
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 glm::mat4 createCameraMatrix()
 {
 	// Obliczanie kierunku patrzenia kamery (w plaszczyznie x-z) na podstawie zwrotu statku kontrolowanej przez klawisze.
@@ -447,10 +452,10 @@ void setUpUniforms(GLuint program, glm::mat4 modelMatrix)
 }
 
 
-void drawPxObjectTexture(GLuint program, Core::RenderContext *context, glm::mat4 modelMatrix, GLuint id, GLuint normalmapId, int textureUnit, float time = 0.0f)
+void drawPxObjectTexture(GLuint program, Core::RenderContext *context, glm::mat4 modelMatrix, GLuint id, GLuint normalmapId, int textureUnit, float progress = 0.0f)
 {
 	glUseProgram(program);
-	glUniform1f(glGetUniformLocation(programTextureExplosion, "time"), time);
+	glUniform1f(glGetUniformLocation(programTextureExplosion, "explosionProgress"), progress);
 
 	setUpUniforms(program, modelMatrix);
 	Core::SetActiveTexture(id, "textureSampler", program, 0);
@@ -514,8 +519,8 @@ void renderScene()
 	for (int i = 1; i <= textureArrayLength; i++) {
 		if (i % 2 == 0) {
 			//TUTAJ ASTEROIDY - ta zakomentowana linia do testów
-			pxBodies[i]->setKinematicTarget(PxTransform(-14, 0, i*2));
-			//pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10) * cos((time + 2 * i) / 10), 0, (i * 4 + 10) * sin((time + 2 * i) / 10)));
+			//pxBodies[i]->setKinematicTarget(PxTransform(-14, 0, i*2));
+			pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10) * cos((time + 2 * i) / 10), 0, (i * 4 + 10) * sin((time + 2 * i) / 10)));
 		}
 		else {
 			pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10) * -cos((time + 2 * i) / 10), 0, (i * 4 + 10) * -sin((time + 2 * i) / 10)));
@@ -533,13 +538,14 @@ void renderScene()
 	//renderables[textureArrayLength+3]->modelMatrix = renderables[textureArrayLength + 3]->modelMatrix * glm::scale(glm::vec3(0.1f));
 	//renderables[textureArrayLength + 3]->modelMatrix = bulletModelMatrix * glm::translate(glm::vec3(0, 0, -10+ 1.9*time));;
 	for (Renderable* renderable : renderables) {
-		//cout << renderable;
 		// sprawdzam czy obiekt zosta³ zestrzeloney i ma wybuchnaæ
-		if (renderable->exploded == true) {
-			glUniform1f(glGetUniformLocation(programTextureExplosion, "time"), time);
-			drawPxObjectTexture(programTextureExplosion, renderable->context, renderable->modelMatrix, renderable->textureId, renderable->textureId2, 13 + i, time);
+		if (renderable->exploded == true && renderable->explosionProgress < 2.8f) {
+			glUniform1f(glGetUniformLocation(programTextureExplosion, "explosionProgress"), renderable->explosionProgress);
+			drawPxObjectTexture(programTextureExplosion, renderable->context, renderable->modelMatrix, renderable->textureId, renderable->textureId2, 13 + i, renderable->explosionProgress);
+			// increase explosion progress value for explosion geometric shader
+			renderable->explosionProgress += 0.002;
 		}
-		else {
+		else if (renderable->exploded == false) {
 			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, renderable->textureId2, 13 + i);
 
 		}
@@ -547,6 +553,19 @@ void renderScene()
 		i++;
 	}
 
+	// Usuwanie fizycznego ksztaltu z zestrzelonych obiektow, ¿eby nie kolidowa³y z innymi obiektami
+	// Bez tego nierenderowane obiekty fizyczne istnia³yby, tyle ¿e nie by³yby widoczne
+	// Obiekty s¹ dodawane do vectora hitActors w metodzie onContact
+	for (PxRigidDynamic* actor : hitActors) {
+		// w tym przypadku wszystkie obiekty maj¹ jeden kszta³t
+		if (actor->getNbShapes() == 1)
+		{
+			PxShape* shape = NULL;
+			actor->getShapes(&shape, 1);
+			actor->detachShape(*shape);
+		}
+	}
+	hitActors.clear();
 
 
 	//rysowanie slonca
