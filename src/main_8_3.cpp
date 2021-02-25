@@ -581,7 +581,7 @@ void renderScene()
 	//renderables[textureArrayLength + 3]->modelMatrix = bulletModelMatrix * glm::translate(glm::vec3(0, 0, -10+ 1.9*time));;
 	for (Renderable* renderable : renderables) {
 		// sprawdzam czy obiekt zosta� zestrzeloney i ma wybuchna�
-		if (renderable->exploded == true && renderable->explosionProgress < 2.8f) {
+		if (renderable->exploded == true && renderable->explosionProgress < 2.4f) {
 			glUniform1f(glGetUniformLocation(programTextureExplosion, "explosionProgress"), renderable->explosionProgress);
 			drawPxObjectTexture(programTextureExplosion, renderable->context, renderable->modelMatrix, renderable->textureId, renderable->textureId2, 13 + i, renderable->explosionProgress);
 			// increase explosion progress value for explosion geometric shader
@@ -635,7 +635,7 @@ void renderScene()
 
 	for (int i = 0; i < newparticles; i++) {
 		int particleIndex = FindUnusedParticle();
-		ParticlesContainer[particleIndex].life = 5.0f; // This particle will live 5 seconds.
+		ParticlesContainer[particleIndex].life = 2.0f; // This particle will live 5 seconds.
 		ParticlesContainer[particleIndex].particleDir = -shipDir;
 		ParticlesContainer[particleIndex].pos = shipPos - glm::vec3(0,0.25f,0) + shipDir/2.f;
 
@@ -777,8 +777,8 @@ int main(int argc, char** argv)
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowPosition(200, 200);
-	glutInitWindowSize(600, 600);
-	glutCreateWindow("Giera taka, ze TOTALNY KOSMOS");
+	glutInitWindowSize(700, 700);
+	glutCreateWindow("Kosmos");
 	glewInit();
 
 	init();
