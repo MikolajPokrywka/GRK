@@ -1,4 +1,4 @@
-#include "glew.h"
+ï»¿#include "glew.h"
 #include "freeglut.h"
 #include "glm.hpp"
 #include "ext.hpp"
@@ -17,9 +17,9 @@
 using namespace std;
 PxRigidDynamic* sphereBody = nullptr;
 PxRigidDynamic* shipBody = nullptr;
-PxRigidDynamic *shipBody_buffor = nullptr;
-PxRigidDynamic *pxSunBody = nullptr;
-PxRigidDynamic *pxBulletBody = nullptr;
+PxRigidDynamic* shipBody_buffor = nullptr;
+PxRigidDynamic* pxSunBody = nullptr;
+PxRigidDynamic* pxBulletBody = nullptr;
 int textureArrayLength = 4;
 GLuint pxProgramColor;
 GLuint pxProgramTexture;
@@ -72,6 +72,48 @@ struct Renderable {
 	float explosionProgress = 0.0f;
 };
 std::vector<Renderable*> renderables;
+
+
+
+GLuint programID;
+GLuint TextureID;
+GLuint Texture;
+GLfloat* g_particule_position_size_data;
+GLubyte* g_particule_color_data;
+Core::ParticleContext particleContext;
+struct Particle {
+	glm::vec3 pos, speed;
+	unsigned char r, g, b, a; // Color
+	float size, angle, weight;
+	float life; // Remaining life of the particle. if <0 : dead and unused.
+	float cameradistance; // *Squared* distance to the camera. if dead : -1.0f
+	glm::vec3 particleDir;
+};
+
+const int MaxParticles = 100000;
+Particle ParticlesContainer[MaxParticles];
+int LastUsedParticle = 0;
+
+// Finds a Particle in ParticlesContainer which isn't used yet.
+// (i.e. life < 0);
+int FindUnusedParticle() {
+
+	for (int i = LastUsedParticle; i < MaxParticles; i++) {
+		if (ParticlesContainer[i].life < 0) {
+			LastUsedParticle = i;
+			return i;
+		}
+	}
+
+	for (int i = 0; i < LastUsedParticle; i++) {
+		if (ParticlesContainer[i].life < 0) {
+			LastUsedParticle = i;
+			return i;
+		}
+	}
+
+	return 0; // All particles are taken, override the first one
+}
 
 
 // contact pairs filtering function
@@ -142,7 +184,7 @@ public:
 	virtual void onWake(PxActor** actors, PxU32 count) {}
 	virtual void onSleep(PxActor** actors, PxU32 count) {}
 	virtual void onTrigger(PxTriggerPair* pairs, PxU32 count) {}
-	virtual void onAdvance(const PxRigidBody*const* bodyBuffer, const PxTransform* poseBuffer, const PxU32 count) {}
+	virtual void onAdvance(const PxRigidBody* const* bodyBuffer, const PxTransform* poseBuffer, const PxU32 count) {}
 };
 
 SimulationEventCallback simulationEventCallback;
@@ -237,7 +279,7 @@ void initRenderables()
 	asteroid6->textureId2 = textureAsteroid2;
 	renderables.emplace_back(asteroid6);
 
-	
+
 	const GLuint textures[50] = { texLoaded, texLoadedsaturn, texLoadedMars, texLoadedSaturn2 };
 	const GLuint textures2[50] = { textureEarth2, textureAsteroid2, textureAsteroid2, textureAsteroid2 };
 	for (int j = 0; j < textureArrayLength; j++) {
@@ -286,10 +328,10 @@ void initPhysicsScene()
 	cout << pxSunBody;
 
 
-	for (int j = 0;j < textureArrayLength;j++) {
-		PxRigidDynamic *boxBody_buffor2 = pxScene.physics->createRigidDynamic(PxTransform(-j*2 -3, j, -j *2 - 3));
+	for (int j = 0; j < textureArrayLength; j++) {
+		PxRigidDynamic* boxBody_buffor2 = pxScene.physics->createRigidDynamic(PxTransform(-j * 2 - 3, j, -j * 2 - 3));
 		PxShape* boxShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
-		// za pomoca attachShape() przypisuje siê kszta³t, który reaguje na kontakt i odpowiada za fizykê
+		// za pomoca attachShape() przypisuje siï¿½ ksztaï¿½t, ktï¿½ry reaguje na kontakt i odpowiada za fizykï¿½
 		boxBody_buffor2->attachShape(*boxShape);
 		boxBody_buffor2->userData = renderables[j + 3];
 		boxBody_buffor2->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
@@ -328,28 +370,28 @@ void updateTransforms()
 			// We use the userData of the objects to set up the model matrices
 			// of proper renderables.
 			if (!actor->userData) continue;
-			Renderable *renderable = (Renderable*)actor->userData;
+			Renderable* renderable = (Renderable*)actor->userData;
 
 			// get world matrix of the object (actor)
 			PxMat44 transform = actor->getGlobalPose();
-			auto &c0 = transform.column0;
-			auto &c1 = transform.column1;
-			auto &c2 = transform.column2;
-			auto &c3 = transform.column3;
+			auto& c0 = transform.column0;
+			auto& c1 = transform.column1;
+			auto& c2 = transform.column2;
+			auto& c3 = transform.column3;
 
 			// set up the model matrix used for the rendering
 			glm::mat4 elemTranslate;
-			
+
 
 			i++;
 			renderable->modelMatrix = glm::mat4(
 				c0.x, c0.y, c0.z, c0.w,
 				c1.x, c1.y, c1.z, c1.w,
 				c2.x, c2.y, c2.z, c2.w,
-				c3.x, c3.y, c3.z, c3.w) *glm::rotate(time / 2, glm::vec3(0, 1, 0));
-		
-		}		
-		
+				c3.x, c3.y, c3.z, c3.w) * glm::rotate(time / 2, glm::vec3(0, 1, 0));
+
+		}
+
 	}
 }
 
@@ -361,10 +403,10 @@ void shoot() {
 	bullet->modelMatrix = bullet->modelMatrix * glm::scale(glm::vec3(0.01f));
 	renderables.emplace_back(bullet);
 
-	pxBulletBody = pxScene.physics->createRigidDynamic(PxTransform(shipPos.x+ shipDir.x, shipPos.y + shipDir.y, shipPos.z+ shipDir.z));
+	pxBulletBody = pxScene.physics->createRigidDynamic(PxTransform(shipPos.x + shipDir.x, shipPos.y + shipDir.y, shipPos.z + shipDir.z));
 	PxShape* bulletShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 	pxBulletBody->attachShape(*bulletShape);
-	pxBulletBody->setLinearVelocity(PxVec3(shipDir.x, shipDir.y, shipDir.z)*50);
+	pxBulletBody->setLinearVelocity(PxVec3(shipDir.x, shipDir.y, shipDir.z) * 50);
 	bulletShape->release();
 	pxBulletBody->userData = renderables.back();
 	//pxBulletBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
@@ -502,7 +544,7 @@ void renderScene()
 
 	// Utworzenie macierzy statku na podstawie jego pozycji
 	// TU SIE USTAWIA ODLEGLOSC
-	glm::translate(shipPos + shipDir * 2.5f + glm::vec3(0, -0.25f, 0)) * glm::rotate(-shipAngle + glm::radians(90.0f), glm::vec3(0, 1, 0)) * glm::scale(glm::vec3(0.25f));
+	glm::translate(shipPos + shipDir * 2.5f + glm::vec3(0, -0.25f, 0))* glm::rotate(-shipAngle + glm::radians(90.0f), glm::vec3(0, 1, 0))* glm::scale(glm::vec3(0.25f));
 	shipModelMatrix = glm::translate(shipPos + shipDir * 0.5f + glm::vec3(0, -0.25f, 0)) * glm::rotate(-shipAngle + glm::radians(90.0f), glm::vec3(0, 1, 0)) * glm::scale(glm::vec3(0.25f));
 
 
@@ -514,11 +556,11 @@ void renderScene()
 
 	//fizyczne obiekty
 	shipBody_buffor->setKinematicTarget(PxTransform(shipPos.x, shipPos.y, shipPos.z));
-	// pierwszym elementem w pxBodies jest ksiê¿yc s³oñca, poruszaj¹cy siê w innej p³aszczyznie ni¿ ni¿ reszta komet i planet
+	// pierwszym elementem w pxBodies jest ksiÄ™Å¼yc sÅ‚oÅ„ca, poruszajÄ…cy siÄ™ w innej pÅ‚aszczyznie niÅ¼ niÅ¼ reszta komet i planet
 	pxBodies[0]->setKinematicTarget(PxTransform(-7 * sin(time), -7*cos(time), -7 * cos(time)));
 	for (int i = 1; i <= textureArrayLength; i++) {
 		if (i % 2 == 0) {
-			//TUTAJ ASTEROIDY - ta zakomentowana linia do testów
+			//TUTAJ ASTEROIDY - ta zakomentowana linia do testï¿½w
 			//pxBodies[i]->setKinematicTarget(PxTransform(-14, 0, i*2));
 			pxBodies[i]->setKinematicTarget(PxTransform((i * 4 + 10) * cos((time + 2 * i) / 10), 0, (i * 4 + 10) * sin((time + 2 * i) / 10)));
 		}
@@ -531,14 +573,14 @@ void renderScene()
 	updateTransforms();
 	int i = 0;
 	//renderables[1] to statek
-	
-	
+
+
 
 	renderables[0]->modelMatrix = shipModelMatrix;
 	//renderables[textureArrayLength+3]->modelMatrix = renderables[textureArrayLength + 3]->modelMatrix * glm::scale(glm::vec3(0.1f));
 	//renderables[textureArrayLength + 3]->modelMatrix = bulletModelMatrix * glm::translate(glm::vec3(0, 0, -10+ 1.9*time));;
 	for (Renderable* renderable : renderables) {
-		// sprawdzam czy obiekt zosta³ zestrzeloney i ma wybuchnaæ
+		// sprawdzam czy obiekt zostaï¿½ zestrzeloney i ma wybuchnaï¿½
 		if (renderable->exploded == true && renderable->explosionProgress < 2.8f) {
 			glUniform1f(glGetUniformLocation(programTextureExplosion, "explosionProgress"), renderable->explosionProgress);
 			drawPxObjectTexture(programTextureExplosion, renderable->context, renderable->modelMatrix, renderable->textureId, renderable->textureId2, 13 + i, renderable->explosionProgress);
@@ -553,11 +595,11 @@ void renderScene()
 		i++;
 	}
 
-	// Usuwanie fizycznego ksztaltu z zestrzelonych obiektow, ¿eby nie kolidowa³y z innymi obiektami
-	// Bez tego nierenderowane obiekty fizyczne istnia³yby, tyle ¿e nie by³yby widoczne
-	// Obiekty s¹ dodawane do vectora hitActors w metodzie onContact
+	// Usuwanie fizycznego ksztaltu z zestrzelonych obiektow, ï¿½eby nie kolidowaï¿½y z innymi obiektami
+	// Bez tego nierenderowane obiekty fizyczne istniaï¿½yby, tyle ï¿½e nie byï¿½yby widoczne
+	// Obiekty sa dodawane do vectora hitActors w metodzie onContact
 	for (PxRigidDynamic* actor : hitActors) {
-		// w tym przypadku wszystkie obiekty maj¹ jeden kszta³t
+		// w tym przypadku wszystkie obiekty majï¿½ jeden ksztaï¿½t
 		if (actor->getNbShapes() == 1)
 		{
 			PxShape* shape = NULL;
@@ -572,12 +614,101 @@ void renderScene()
 	glUseProgram(programSun);
 	glUniform3f(glGetUniformLocation(programSun, "lightPos"), lightPos1.x, lightPos1.y, lightPos1.z);
 	glUniform3f(glGetUniformLocation(programSun, "cameraPos"), shipPos.x, shipPos.y, shipPos.z);
-	drawObject(programSun, sphereContext, glm::translate(lightPos1)  *glm::scale(glm::vec3(5.0f)), glm::vec3(1.0f, 0.8f, 0.2f));
+	drawObject(programSun, sphereContext, glm::translate(lightPos1) * glm::scale(glm::vec3(5.0f)), glm::vec3(1.0f, 0.8f, 0.2f));
 
 	glUseProgram(programSun);
 	glUniform3f(glGetUniformLocation(programSun, "lightPos"), lightPos2.x, lightPos2.y, lightPos2.z);
 	glUniform3f(glGetUniformLocation(programSun, "cameraPos"), shipPos.x, shipPos.y, shipPos.z);
 	drawObject(programSun, sphereContext, glm::translate(lightPos2) * glm::scale(glm::vec3(10.0f)), glm::vec3(1.0f, 0.8f, 0.2f));
+
+
+
+
+	//// Particle ////
+
+	// Generate 10 new particule each millisecond,
+	// but limit this to 16 ms (60 fps), or if you have 1 long frame (1sec),
+	// newparticles will be huge and the next frame even longer.
+	int newparticles = (int)(dtime * 10000.0);
+	if (newparticles > (int)(0.016f * 10000.0))
+		newparticles = (int)(0.016f * 10000.0);
+
+	for (int i = 0; i < newparticles; i++) {
+		int particleIndex = FindUnusedParticle();
+		ParticlesContainer[particleIndex].life = 5.0f; // This particle will live 5 seconds.
+		ParticlesContainer[particleIndex].particleDir = -shipDir;
+		ParticlesContainer[particleIndex].pos = shipPos - glm::vec3(0,0.25f,0) + shipDir/2.f;
+
+		float spread = 2.5f;
+		//glm::vec3 maindir = glm::vec3(0.0f, 10.0f, 0.0f);
+		// Very bad way to generate a random direction; 
+		// See for instance http://stackoverflow.com/questions/5408276/python-uniform-spherical-distribution instead,
+		// combined with some user-controlled parameters (main direction, spread, etc)
+		
+		glm::vec3 randomdir = glm::vec3(
+			(rand() % 200 - 100.0f) / 1000.0f,
+			(rand() % 200 - 100.0f) / 1000.0f,
+			(rand() % 200 - 100.0f) / 1000.0f
+		);
+
+		ParticlesContainer[particleIndex].speed = (-shipDir + randomdir * spread) / 10.f;
+
+
+		// Very bad way to generate a random color
+		ParticlesContainer[particleIndex].r = 255;
+		ParticlesContainer[particleIndex].g = rand() % 256;
+		ParticlesContainer[particleIndex].b = 0;
+		ParticlesContainer[particleIndex].a = (rand() % 256) / 3;
+
+		ParticlesContainer[particleIndex].size = (rand() % 100) / 2000.0f + 0.1f;
+	}
+
+
+
+	// Simulate all particles
+	int ParticlesCount = 0;
+	for (int i = 0; i < MaxParticles; i++) {
+
+		Particle& p = ParticlesContainer[i]; // shortcut
+
+		if (p.life > 0.0f) {
+
+			// Decrease life
+			p.life -= dtime;
+			if (p.life > 0.0f) {
+
+				// Simulate simple physics : gravity only, no collisions
+				p.speed += p.particleDir * (float)dtime * 0.2f;
+				p.pos += p.speed * (float)dtime;
+				p.cameradistance = glm::length2(p.pos - cameraPos);
+				//ParticlesContainer[i].pos += glm::vec3(0.0f,10.0f, 0.0f) * (float)delta;
+
+				// Fill the GPU buffer
+				g_particule_position_size_data[4 * ParticlesCount + 0] = p.pos.x;
+				g_particule_position_size_data[4 * ParticlesCount + 1] = p.pos.y;
+				g_particule_position_size_data[4 * ParticlesCount + 2] = p.pos.z;
+
+				g_particule_position_size_data[4 * ParticlesCount + 3] = p.size;
+
+				g_particule_color_data[4 * ParticlesCount + 0] = p.r;
+				g_particule_color_data[4 * ParticlesCount + 1] = p.g;
+				g_particule_color_data[4 * ParticlesCount + 2] = p.b;
+				g_particule_color_data[4 * ParticlesCount + 3] = p.a;
+
+			}
+			else {
+				// Particles that just died will be put at the end of the buffer in SortParticles();
+				p.cameradistance = -1.0f;
+			}
+
+			ParticlesCount++;
+
+		}
+	}
+
+	Core::DrawParticles(particleContext, programID, TextureID, Texture, ParticlesCount, cameraMatrix, perspectiveMatrix);
+
+
 
 	glUseProgram(0);
 	glutSwapBuffers();
@@ -605,6 +736,18 @@ void init()
 	texLoadedSkybox = Core::LoadTexture("textures/galaxy.png");
 	programSkybox = shaderLoader.CreateProgram("shaders/shader_skybox.vert", "shaders/shader_skybox.frag");
 
+	Texture = Core::LoadTexture("textures/particle.png");
+	programID = shaderLoader.CreateProgram("shaders/shader_particle.vert", "shaders/shader_particle.frag");
+	g_particule_position_size_data = new GLfloat[MaxParticles * 4];
+	g_particule_color_data = new GLubyte[MaxParticles * 4];
+
+	for (int i = 0; i < MaxParticles; i++) {
+		ParticlesContainer[i].life = -1.0f;
+		ParticlesContainer[i].cameradistance = -1.0f;
+	}
+
+	particleContext.initParticle(programID, MaxParticles, g_particule_position_size_data, g_particule_color_data);
+
 	sphereModel = obj::loadModelFromFile("models/sphere.obj");
 	shipModel = obj::loadModelFromFile("models/spaceship.obj");
 	shipContext.initFromOBJ(shipModel);
@@ -629,13 +772,13 @@ void idle()
 	glutPostRedisplay();
 }
 
-int main(int argc, char ** argv)
+int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowPosition(200, 200);
 	glutInitWindowSize(600, 600);
-	glutCreateWindow("Giera taka, ¿e TOTALNY KOSMOS");
+	glutCreateWindow("Giera taka, ze TOTALNY KOSMOS");
 	glewInit();
 
 	init();

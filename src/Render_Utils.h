@@ -17,6 +17,25 @@ namespace Core
         void initFromOBJ(obj::Model& model);
 	};
 
+	struct ParticleContext
+	{
+		GLuint VertexArrayID;
+		GLuint billboard_vertex_buffer;
+		GLuint particles_position_buffer;
+		GLuint particles_color_buffer;
+		int MaxParticles;
+	    GLfloat* g_particule_position_size_data;
+	    GLubyte* g_particule_color_data;
+		GLuint CameraRight_worldspace_ID;
+		GLuint CameraUp_worldspace_ID;
+		GLuint ViewProjMatrixID;
+
+		static const GLfloat g_vertex_buffer_data[];
+		int size = 0;
+
+		void initParticle(GLuint programID, const int MaxPart, GLfloat* g_particule_position_size_data, GLubyte* g_particule_color_data);
+	};
+
 
 	// vertexArray - jednowymiarowa tablica zawierajaca wartosci opisujace pozycje kolejnych wierzcholkow w jednym ciagu (x1, y1, z1, w1, x2, y2, z2, w2, ...)
 	// numVertices - liczba wierzcholkow do narysowania
@@ -65,6 +84,7 @@ namespace Core
 	//void DrawVertexArray(const VertexData & data);
 
 	void DrawContext(RenderContext& context);
+	void DrawParticles(Core::ParticleContext& context, GLuint programID, GLuint TextureID, GLuint Texture, int ParticlesCount, glm::mat4 cameraMatrix, glm::mat4 perspectiveMatrix);
 
 	void DrawModel(obj::Model* model);
 }
