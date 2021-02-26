@@ -537,6 +537,7 @@ void drawPxObjectTexture(GLuint program, Core::RenderContext* context, glm::mat4
 
 
 
+
 void renderScene()
 {
 	// Aktualizacja macierzy widoku i rzutowania. Macierze sa przechowywane w zmiennych globalnych, bo uzywa ich funkcja drawObject.
@@ -800,6 +801,7 @@ void idle()
 {
 	glutPostRedisplay();
 }
+
 
 
 int main(int argc, char** argv)
