@@ -329,7 +329,7 @@ void initPhysicsScene()
 
 
 	for (int j = 0; j < textureArrayLength; j++) {
-		PxRigidDynamic* boxBody_buffor2 = pxScene.physics->createRigidDynamic(PxTransform(-j*1.5 - 3, j, -j*1.5 - 3));
+		PxRigidDynamic* boxBody_buffor2 = pxScene.physics->createRigidDynamic(PxTransform(-j*1.5 - 23, j, -j*1.5 - 23));
 		PxShape* boxShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 		// za pomoca attachShape() przypisuje si� kszta�t, kt�ry reaguje na kontakt i odpowiada za fizyk�
 		boxBody_buffor2->attachShape(*boxShape);
@@ -572,7 +572,7 @@ void renderScene()
 	//pxBulletBody->setKinematicTarget(PxTransform(shipPos.x +3+ time/10, 0, 0));
 	updateTransforms();
 	int i = 0;
-	//renderables[1] to statek
+	//renderables[0] to statek
 
 
 
@@ -629,9 +629,9 @@ void renderScene()
 	// Generate 10 new particule each millisecond,
 	// but limit this to 16 ms (60 fps), or if you have 1 long frame (1sec),
 	// newparticles will be huge and the next frame even longer.
-	int newparticles = (int)(dtime * 10000.0);
-	if (newparticles > (int)(0.016f * 10000.0))
-		newparticles = (int)(0.016f * 10000.0);
+	int newparticles = (int)(sin(dtime) * 1000.0);
+	if (newparticles > (int)(0.016f * 1000.0))
+		newparticles = (int)(0.016f * 1000.0);
 
 	for (int i = 0; i < newparticles; i++) {
 		int particleIndex = FindUnusedParticle();
@@ -654,7 +654,7 @@ void renderScene()
 		ParticlesContainer[particleIndex].speed = (-shipDir + randomdir * spread) / 10.f;
 
 
-		// Very bad way to generate a random color
+		// Generate a random color
 		ParticlesContainer[particleIndex].r = 255;
 		ParticlesContainer[particleIndex].g = rand() % 256;
 		ParticlesContainer[particleIndex].b = 0;
