@@ -25,6 +25,7 @@ GLuint pxProgramColor;
 GLuint pxProgramTexture;
 
 bool isBulletVisible = true;
+bool isShipIntact = true;
 
 
 GLuint textureTest2;
@@ -136,53 +137,55 @@ public:
 	void onContact(const PxContactPairHeader& pairHeader, const PxContactPair* pairs, PxU32 nbPairs) {
 		// HINT: You can check which actors are in contact
 		// using pairHeader.actors[0] and pairHeader.actors[1]
-		
-			cout << "nbPairs: " << nbPairs << "\n";
-			for (PxU32 i = 0; i < nbPairs; i++)
-			{
-				const PxContactPair& cp = pairs[i];
 
-				// HINT: two get the contact points, use
-				// PxContactPair::extractContacts
-				// You need to provide the function with a buffer
-				// in which the contact points will be stored.
-				// Create an array (vector) of type PxContactPairPoint
-				// The number of elements in array should be at least
-				// cp.contactCount (which is the number of contact points)
-				// You also need to provide the function with the
-				// size of the buffer (it should equal the size of the
-				// array in bytes)
-				// Finally, for every extracted point, you can access
-				// its details, such as position
-				std::vector<PxContactPairPoint> pairPoints(cp.contactCount);
-				PxU32 nbContacts = cp.extractContacts(data(pairPoints), sizeof(pairPoints));
-				cout << "nbContacts: ";
-				cout << nbContacts;
-				cout << "\n";
-				nbContacts;
-				for (int j = 0; j < nbContacts;j++) {
-					cout << "Positions: ";
-					cout << pairPoints[j].position.x << " ";
-					cout << pairPoints[j].position.y << " ";
-					cout << pairPoints[j].position.z << "\n";
-					cout << pairHeader.actors[0] << "   " << pairHeader.actors[1] << "\n\n";
-					
+		cout << "nbPairs: " << nbPairs << "\n";
+		for (PxU32 i = 0; i < nbPairs; i++)
+		{
+			const PxContactPair& cp = pairs[i];
+
+			// HINT: two get the contact points, use
+			// PxContactPair::extractContacts
+			// You need to provide the function with a buffer
+			// in which the contact points will be stored.
+			// Create an array (vector) of type PxContactPairPoint
+			// The number of elements in array should be at least
+			// cp.contactCount (which is the number of contact points)
+			// You also need to provide the function with the
+			// size of the buffer (it should equal the size of the
+			// array in bytes)
+			// Finally, for every extracted point, you can accesss
+			// its details, such as position
+			std::vector<PxContactPairPoint> pairPoints(cp.contactCount);
+			PxU32 nbContacts = cp.extractContacts(data(pairPoints), sizeof(pairPoints));
+			cout << "nbContacts: ";
+			cout << nbContacts;
+			cout << "\n";
+			nbContacts;
+			for (int j = 0; j < nbContacts; j++) {
+				cout << "Positions: ";
+				cout << pairPoints[j].position.x << " ";
+				cout << pairPoints[j].position.y << " ";
+				cout << pairPoints[j].position.z << "\n";
+				cout << pairHeader.actors[0] << "   " << pairHeader.actors[1] << "\n\n";
+
+			}
+			for (int i = 0; i <= textureArrayLength; i++) {
+				// szukam ktory z obiektow pxBodies bierze udzial w kontakcie
+
+				// jesli statek, to on ma eksplodowac, a nie planeta
+				if (pairHeader.actors[0] == shipBody_buffor || pairHeader.actors[1] == shipBody_buffor) {
+					// renderables[0] to statek
+					renderables[0]->exploded = true;
+					isShipIntact = false;
+					hitActors.emplace_back(shipBody_buffor);
+					break;
+
 				}
-				for (int i = 0; i <= textureArrayLength; i++) {
-					// szukam ktory z obiektow pxBodies bierze udzial w kontakcie
-
-					// jesli statek, to on ma eksplodowac, a nie planeta
-					if (pairHeader.actors[0] == shipBody_buffor || pairHeader.actors[1] == shipBody_buffor) {
-						// renderables[0] to statek
-						renderables[0]->exploded = true;
-						hitActors.emplace_back(shipBody_buffor);
-						break;
-
-					} else if (pairHeader.actors[0] == pxBodies[i] || pairHeader.actors[1] == pxBodies[i]) {
-						renderables[i + 2]->exploded = true;
-						hitActors.emplace_back(pxBodies[i]);
-					}
+				else if (pairHeader.actors[0] == pxBodies[i] || pairHeader.actors[1] == pxBodies[i]) {
+					renderables[i + 2]->exploded = true;
+					hitActors.emplace_back(pxBodies[i]);
 				}
+			}
 		}
 	}
 
@@ -337,7 +340,7 @@ void initPhysicsScene()
 
 
 	for (int j = 0; j < textureArrayLength; j++) {
-		PxRigidDynamic* boxBody_buffor2 = pxScene.physics->createRigidDynamic(PxTransform(-j*1.5 - 23, j, -j*1.5 - 23));
+		PxRigidDynamic* boxBody_buffor2 = pxScene.physics->createRigidDynamic(PxTransform(-j * 1.5 - 23, j, -j * 1.5 - 23));
 		PxShape* boxShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 		// za pomoca attachShape() przypisuje si� kszta�t, kt�ry reaguje na kontakt i odpowiada za fizyk�
 		boxBody_buffor2->attachShape(*boxShape);
@@ -346,8 +349,8 @@ void initPhysicsScene()
 		pxScene.scene->addActor(*boxBody_buffor2);
 		pxBodies.push_back(boxBody_buffor2);
 	}
-	
-	
+
+
 
 
 	//shipBody = pxScene.physics->createRigidDynamic(PxTransform(-25, -2, 0));
@@ -411,7 +414,7 @@ void shoot() {
 	bullet->modelMatrix = bullet->modelMatrix * glm::scale(glm::vec3(0.01f));
 	renderables.emplace_back(bullet);
 
-	pxBulletBody = pxScene.physics->createRigidDynamic(PxTransform(shipPos.x + shipDir.x*5, shipPos.y + shipDir.y*5-2, shipPos.z + shipDir.z*5));
+	pxBulletBody = pxScene.physics->createRigidDynamic(PxTransform(shipPos.x + shipDir.x * 5, shipPos.y + shipDir.y * 5 - 2, shipPos.z + shipDir.z * 5));
 	PxShape* bulletShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 	pxBulletBody->attachShape(*bulletShape);
 	pxBulletBody->setLinearVelocity(PxVec3(shipDir.x, shipDir.y, shipDir.z) * 50);
@@ -502,7 +505,7 @@ void setUpUniforms(GLuint program, glm::mat4 modelMatrix)
 }
 
 
-void drawPxObjectTexture(GLuint program, Core::RenderContext *context, glm::mat4 modelMatrix, GLuint id, GLuint normalmapId, int textureUnit, float progress = 0.0f)
+void drawPxObjectTexture(GLuint program, Core::RenderContext* context, glm::mat4 modelMatrix, GLuint id, GLuint normalmapId, int textureUnit, float progress = 0.0f)
 {
 	glUseProgram(program);
 	glUniform1f(glGetUniformLocation(programTextureExplosion, "explosionProgress"), progress);
@@ -565,7 +568,7 @@ void renderScene()
 	//fizyczne obiekty
 	shipBody_buffor->setKinematicTarget(PxTransform(shipPos.x, shipPos.y, shipPos.z));
 	// pierwszym elementem w pxBodies jest księżyc słońca, poruszający się w innej płaszczyznie niż niż reszta komet i planet
-	pxBodies[0]->setKinematicTarget(PxTransform(-7 * sin(time), -7*cos(time), -7 * cos(time)));
+	pxBodies[0]->setKinematicTarget(PxTransform(-7 * sin(time), -7 * cos(time), -7 * cos(time)));
 	for (int i = 1; i <= textureArrayLength; i++) {
 		if (i % 2 == 0) {
 			//TUTAJ ASTEROIDY - ta zakomentowana linia do test�w
@@ -597,7 +600,7 @@ void renderScene()
 		else if (renderable->exploded == false) {
 			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, renderable->textureId2, 13 + i);
 		}
-		
+
 		i++;
 	}
 
@@ -643,14 +646,14 @@ void renderScene()
 		int particleIndex = FindUnusedParticle();
 		ParticlesContainer[particleIndex].life = 2.0f; // This particle will live 5 seconds.
 		ParticlesContainer[particleIndex].particleDir = -shipDir;
-		ParticlesContainer[particleIndex].pos = shipPos - glm::vec3(0,0.25f,0) + shipDir/2.f;
+		ParticlesContainer[particleIndex].pos = shipPos - glm::vec3(0, 0.25f, 0) + shipDir / 2.f;
 
 		float spread = 2.5f;
 		//glm::vec3 maindir = glm::vec3(0.0f, 10.0f, 0.0f);
 		// Very bad way to generate a random direction; 
 		// See for instance http://stackoverflow.com/questions/5408276/python-uniform-spherical-distribution instead,
 		// combined with some user-controlled parameters (main direction, spread, etc)
-		
+
 		glm::vec3 randomdir = glm::vec3(
 			(rand() % 200 - 100.0f) / 1000.0f,
 			(rand() % 200 - 100.0f) / 1000.0f,
@@ -712,7 +715,7 @@ void renderScene()
 		}
 	}
 
-	Core::DrawParticles(particleContext, programID, TextureID, Texture, ParticlesCount, cameraMatrix, perspectiveMatrix);
+	if (isShipIntact) Core::DrawParticles(particleContext, programID, TextureID, Texture, ParticlesCount, cameraMatrix, perspectiveMatrix);
 
 
 
