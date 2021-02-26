@@ -22,9 +22,9 @@ out vec3 viewDirTS;
 out vec2 interpTexCoord;
 out VS_OUT
 {
-    vec3 v_Normal;
-    vec2 v_TexCoord;
-    vec3 v_FragPos;
+    //vec3 v_Normal;
+    vec2 texCoords;
+    //vec3 v_FragPos;
 } vs_out;
 
 
