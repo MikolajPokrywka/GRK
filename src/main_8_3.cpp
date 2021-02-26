@@ -363,7 +363,29 @@ void initPhysicsScene()
 		pxScene.scene->addActor(*boxBody_buffor2);
 		pxBodies.push_back(boxBody_buffor2);
 	}
+	const GLuint textures[50] = { texLoadedsaturn, texLoadedMars, texLoadedSaturn2,  texLoadedsaturn, texLoadedMars, texLoadedSaturn2 };
+	for (int j = 0; j < 100; j++) {
+		Renderable* bullet = new Renderable();
+		bullet->context = &pxAsteroid1Context;
+		bullet->textureId = textures[rand() % 4];
+		bullet->textureId2 = textureAsteroid2;
+		bullet->modelMatrix = bullet->modelMatrix * glm::scale(glm::vec3(0.01f));
+		renderables.emplace_back(bullet);
 
+		PxRigidDynamic* pxBulletBody2 = pxScene.physics->createRigidDynamic(PxTransform(rand() % 50, rand() % 50, rand() % 50 -25));
+		PxShape* bulletShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
+		pxBulletBody2->attachShape(*bulletShape);
+		pxBulletBody2->setLinearVelocity(PxVec3(-0.5, -0.5, 0));
+		bulletShape->release();
+		pxBulletBody2->userData = renderables.back();
+		//pxBulletBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+		pxScene.scene->addActor(*pxBulletBody2);
+	}
+
+
+	
+
+	
 
 
 
