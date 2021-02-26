@@ -22,10 +22,12 @@ PxRigidDynamic* shipBody_buffor = nullptr;
 PxRigidDynamic* pxSunBody = nullptr;
 PxRigidDynamic* pxBulletBody = nullptr;
 int textureArrayLength = 8;
+int bodiesCount = textureArrayLength;
 GLuint pxProgramColor;
 GLuint pxProgramTexture;
 
 bool isBulletVisible = true;
+bool isShipIntact = true;
 
 
 GLuint textureTest2;
@@ -71,14 +73,16 @@ struct Renderable {
 	GLuint textureId2;
 	bool exploded = false;
 	float explosionProgress = 0.0f;
+	bool isBullet = false;
+	bool render = true;
 };
 std::vector<Renderable*> renderables;
 
 
 
-GLuint programID;
-GLuint TextureID;
-GLuint Texture;
+GLuint programParticle;
+GLuint texParticle;
+GLuint partText;
 GLfloat* g_particule_position_size_data;
 GLubyte* g_particule_color_data;
 Core::ParticleContext particleContext;
@@ -137,11 +141,11 @@ public:
 	void onContact(const PxContactPairHeader& pairHeader, const PxContactPair* pairs, PxU32 nbPairs) {
 		// HINT: You can check which actors are in contact
 		// using pairHeader.actors[0] and pairHeader.actors[1]
-		
-			cout << "nbPairs: " << nbPairs << "\n";
-			for (PxU32 i = 0; i < nbPairs; i++)
-			{
-				const PxContactPair& cp = pairs[i];
+
+		cout << "nbPairs: " << nbPairs << "\n";
+		for (PxU32 i = 0; i < nbPairs; i++)
+		{
+			const PxContactPair& cp = pairs[i];
 
 				// HINT: two get the contact points, use
 				// PxContactPair::extractContacts
@@ -176,13 +180,23 @@ public:
 					hitActors.emplace_back(shipBody_buffor);
 				}
 				else {
-					for (int i = 0; i <= textureArrayLength; i++) {
+					for (int i = 0; i <= bodiesCount; i++) {
 						// szukam ktory z obiektow pxBodies bierze udzial w kontakcie
 
 						if (pairHeader.actors[0] == pxBodies[i] || pairHeader.actors[1] == pxBodies[i]) {
+							if (renderables[i + 2]->isBullet == true) {
+								cout << "kula";
+								for (Renderable* renderable : renderables) {
+									if (renderable->isBullet == true) {
+										renderable->render = false;
+									}
+								}
+								
+							}
 							renderables[i + 2]->exploded = true;
 							hitActors.emplace_back(pxBodies[i]);
-							cout << "KONTAKT\n";
+							cout << i << "  "<< renderables[i + 2]->exploded <<"KONTAKT\n";
+							
 						}
 					}
 				}
@@ -340,7 +354,7 @@ void initPhysicsScene()
 
 
 	for (int j = 0; j < textureArrayLength; j++) {
-		PxRigidDynamic* boxBody_buffor2 = pxScene.physics->createRigidDynamic(PxTransform(-j*1.5 - 23, j, -j*1.5 - 23));
+		PxRigidDynamic* boxBody_buffor2 = pxScene.physics->createRigidDynamic(PxTransform(-j * 1.5 - 23, j, -j * 1.5 - 23));
 		PxShape* boxShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 		// za pomoca attachShape() przypisuje si� kszta�t, kt�ry reaguje na kontakt i odpowiada za fizyk�
 		boxBody_buffor2->attachShape(*boxShape);
@@ -349,8 +363,8 @@ void initPhysicsScene()
 		pxScene.scene->addActor(*boxBody_buffor2);
 		pxBodies.push_back(boxBody_buffor2);
 	}
-	
-	
+
+
 
 
 	//shipBody = pxScene.physics->createRigidDynamic(PxTransform(-25, -2, 0));
@@ -408,13 +422,14 @@ void updateTransforms()
 
 void shoot() {
 	Renderable* bullet = new Renderable();
+	bullet->isBullet = true;
 	bullet->context = &pxSphereContext;
 	bullet->textureId = texLoadedSaturn2;
 	bullet->textureId2 = textureTest2;
 	bullet->modelMatrix = bullet->modelMatrix * glm::scale(glm::vec3(0.01f));
 	renderables.emplace_back(bullet);
 
-	pxBulletBody = pxScene.physics->createRigidDynamic(PxTransform(shipPos.x + shipDir.x*5, shipPos.y + shipDir.y*5-2, shipPos.z + shipDir.z*5));
+	pxBulletBody = pxScene.physics->createRigidDynamic(PxTransform(shipPos.x + shipDir.x * 5, shipPos.y + shipDir.y * 5 - 2, shipPos.z + shipDir.z * 5));
 	PxShape* bulletShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 	pxBulletBody->attachShape(*bulletShape);
 	pxBulletBody->setLinearVelocity(PxVec3(shipDir.x, shipDir.y, shipDir.z) * 50);
@@ -423,6 +438,8 @@ void shoot() {
 	//pxBulletBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 	pxScene.scene->addActor(*pxBulletBody);
 	pxBodies.push_back(pxBulletBody);
+	bodiesCount++;
+
 }
 
 
@@ -505,7 +522,7 @@ void setUpUniforms(GLuint program, glm::mat4 modelMatrix)
 }
 
 
-void drawPxObjectTexture(GLuint program, Core::RenderContext *context, glm::mat4 modelMatrix, GLuint id, GLuint normalmapId, int textureUnit, float progress = 0.0f)
+void drawPxObjectTexture(GLuint program, Core::RenderContext* context, glm::mat4 modelMatrix, GLuint id, GLuint normalmapId, int textureUnit, float progress = 0.0f)
 {
 	glUseProgram(program);
 	glUniform1f(glGetUniformLocation(programTextureExplosion, "explosionProgress"), progress);
@@ -568,7 +585,7 @@ void renderScene()
 	//fizyczne obiekty
 	shipBody_buffor->setKinematicTarget(PxTransform(shipPos.x, shipPos.y, shipPos.z));
 	// pierwszym elementem w pxBodies jest księżyc słońca, poruszający się w innej płaszczyznie niż niż reszta komet i planet
-	pxBodies[0]->setKinematicTarget(PxTransform(-7 * sin(time), -7*cos(time), -7 * cos(time)));
+	pxBodies[0]->setKinematicTarget(PxTransform(-7 * sin(time), -7 * cos(time), -7 * cos(time)));
 	for (int i = 1; i <= textureArrayLength; i++) {
 		if (i % 2 == 0) {
 			//TUTAJ ASTEROIDY - ta zakomentowana linia do test�w
@@ -591,16 +608,16 @@ void renderScene()
 	//renderables[textureArrayLength + 3]->modelMatrix = bulletModelMatrix * glm::translate(glm::vec3(0, 0, -10+ 1.9*time));;
 	for (Renderable* renderable : renderables) {
 		// sprawdzam czy obiekt zosta� zestrzeloney i ma wybuchnac
-		if (renderable->exploded == true && renderable->explosionProgress < 2.4f) {
+		if (renderable->exploded == true && renderable->explosionProgress < 2.4f && renderable->render == true) {
 			glUniform1f(glGetUniformLocation(programTextureExplosion, "explosionProgress"), renderable->explosionProgress);
 			drawPxObjectTexture(programTextureExplosion, renderable->context, renderable->modelMatrix, renderable->textureId, renderable->textureId2, 13 + i, renderable->explosionProgress);
 			// increase explosion progress value for explosion geometric shader
 			renderable->explosionProgress += 0.002;
 		}
-		else if (renderable->exploded == false) {
+		else if (renderable->exploded == false && renderable->render == true) {
 			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, renderable->textureId2, 13 + i);
 		}
-		
+
 		i++;
 	}
 
@@ -646,14 +663,14 @@ void renderScene()
 		int particleIndex = FindUnusedParticle();
 		ParticlesContainer[particleIndex].life = 2.0f; // This particle will live 5 seconds.
 		ParticlesContainer[particleIndex].particleDir = -shipDir;
-		ParticlesContainer[particleIndex].pos = shipPos - glm::vec3(0,0.25f,0) + shipDir/2.f;
+		ParticlesContainer[particleIndex].pos = shipPos - glm::vec3(0, 0.25f, 0) + shipDir / 2.f;
 
 		float spread = 2.5f;
 		//glm::vec3 maindir = glm::vec3(0.0f, 10.0f, 0.0f);
 		// Very bad way to generate a random direction; 
 		// See for instance http://stackoverflow.com/questions/5408276/python-uniform-spherical-distribution instead,
 		// combined with some user-controlled parameters (main direction, spread, etc)
-		
+
 		glm::vec3 randomdir = glm::vec3(
 			(rand() % 200 - 100.0f) / 1000.0f,
 			(rand() % 200 - 100.0f) / 1000.0f,
@@ -715,7 +732,7 @@ void renderScene()
 		}
 	}
 
-	Core::DrawParticles(particleContext, programID, TextureID, Texture, ParticlesCount, cameraMatrix, perspectiveMatrix);
+	if (renderables[0]->exploded == false) Core::DrawParticles(particleContext, programParticle, texParticle, partText, ParticlesCount, cameraMatrix, perspectiveMatrix);
 
 
 
@@ -735,21 +752,21 @@ void init()
 	programTexture = shaderLoader.CreateProgram("shaders/shader_tex.vert", "shaders/shader_tex.frag");
 	programTextureExplosion = shaderLoader.CreateProgram("shaders/shader_tex.vert", "shaders/shader_tex.frag", "shaders/shader_tex.geom");
 
-	texLoaded = Core::LoadTexture("textures/earth.png");
+	texLoaded = Core::LoadTexture("textures/earth1.png");
 	texLoadedsaturn = Core::LoadTexture("textures/mercury.png");
 	texLoadedMars = Core::LoadTexture("textures/2k_mars.png");
 	texLoadedSaturn2 = Core::LoadTexture("textures/saturn.png");
 
 	textureShip2 = Core::LoadTexture("textures/spaceship_normals.png");
-	textureEarth2 = Core::LoadTexture("textures/earth2_normals.png");
+	textureEarth2 = Core::LoadTexture("textures/earth3_normals.png");
 	textureAsteroid2 = Core::LoadTexture("textures/asteroid_normals.png");
 	textureTest2 = Core::LoadTexture("textures/test_normals.png");
 
 	texLoadedSkybox = Core::LoadTexture("textures/galaxy.png");
 	programSkybox = shaderLoader.CreateProgram("shaders/shader_skybox.vert", "shaders/shader_skybox.frag");
 
-	Texture = Core::LoadTexture("textures/particle.png");
-	programID = shaderLoader.CreateProgram("shaders/shader_particle.vert", "shaders/shader_particle.frag");
+	partText = Core::LoadTexture("textures/particle.png");
+	programParticle = shaderLoader.CreateProgram("shaders/shader_particle.vert", "shaders/shader_particle.frag");
 	g_particule_position_size_data = new GLfloat[MaxParticles * 4];
 	g_particule_color_data = new GLubyte[MaxParticles * 4];
 
@@ -758,7 +775,7 @@ void init()
 		ParticlesContainer[i].cameradistance = -1.0f;
 	}
 
-	particleContext.initParticle(programID, MaxParticles, g_particule_position_size_data, g_particule_color_data);
+	particleContext.initParticle(programParticle, MaxParticles, g_particule_position_size_data, g_particule_color_data);
 
 	sphereModel = obj::loadModelFromFile("models/sphere.obj");
 	shipModel = obj::loadModelFromFile("models/spaceship.obj");
@@ -796,7 +813,7 @@ int main(int argc, char** argv)
 	
 	glutInitWindowPosition(100, 100);
 	glutInitWindowSize(700, 700);
-	glutCreateWindow("Kosmos");
+	glutCreateWindow("Projekt");
 	//glutFullScreen();
 	glutReshapeFunc(onReshape);
 
