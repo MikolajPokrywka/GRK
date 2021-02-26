@@ -22,9 +22,7 @@ out vec3 viewDirTS;
 out vec2 interpTexCoord;
 out VS_OUT
 {
-    //vec3 v_Normal;
     vec2 texCoords;
-    //vec3 v_FragPos;
 } vs_out;
 
 
@@ -49,7 +47,4 @@ void main()
 	gl_Position = modelViewProjectionMatrix * vec4(vertexPosition, 1.0);
 
 	interpTexCoord = vertexTexCoord;
-	//vs_out.v_Normal = normalize(mat3(transpose(inverse(modelMatrix))) * vertexNormal);
-	//vs_out.v_TexCoord = vertexTexCoord;
-	//vs_out.v_FragPos = vec3(modelMatrix * vec4(vertexPosition, 1.0));
 }

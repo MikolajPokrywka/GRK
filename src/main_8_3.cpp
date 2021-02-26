@@ -170,7 +170,15 @@ public:
 				}
 				for (int i = 0; i <= textureArrayLength; i++) {
 					// szukam ktory z obiektow pxBodies bierze udzial w kontakcie
-					if (pairHeader.actors[0] == pxBodies[i] || pairHeader.actors[1] == pxBodies[i]) {
+
+					// jesli statek, to on ma eksplodowac, a nie planeta
+					if (pairHeader.actors[0] == shipBody_buffor || pairHeader.actors[1] == shipBody_buffor) {
+						// renderables[0] to statek
+						renderables[0]->exploded = true;
+						hitActors.emplace_back(shipBody_buffor);
+						break;
+
+					} else if (pairHeader.actors[0] == pxBodies[i] || pairHeader.actors[1] == pxBodies[i]) {
 						renderables[i + 2]->exploded = true;
 						hitActors.emplace_back(pxBodies[i]);
 					}
@@ -575,12 +583,11 @@ void renderScene()
 	//renderables[0] to statek
 
 
-
 	renderables[0]->modelMatrix = shipModelMatrix;
 	//renderables[textureArrayLength+3]->modelMatrix = renderables[textureArrayLength + 3]->modelMatrix * glm::scale(glm::vec3(0.1f));
 	//renderables[textureArrayLength + 3]->modelMatrix = bulletModelMatrix * glm::translate(glm::vec3(0, 0, -10+ 1.9*time));;
 	for (Renderable* renderable : renderables) {
-		// sprawdzam czy obiekt zosta� zestrzeloney i ma wybuchna�
+		// sprawdzam czy obiekt zosta� zestrzeloney i ma wybuchnac
 		if (renderable->exploded == true && renderable->explosionProgress < 2.4f) {
 			glUniform1f(glGetUniformLocation(programTextureExplosion, "explosionProgress"), renderable->explosionProgress);
 			drawPxObjectTexture(programTextureExplosion, renderable->context, renderable->modelMatrix, renderable->textureId, renderable->textureId2, 13 + i, renderable->explosionProgress);
@@ -589,7 +596,6 @@ void renderScene()
 		}
 		else if (renderable->exploded == false) {
 			drawPxObjectTexture(programTexture, renderable->context, renderable->modelMatrix, renderable->textureId, renderable->textureId2, 13 + i);
-
 		}
 		
 		i++;
