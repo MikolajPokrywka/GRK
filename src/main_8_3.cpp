@@ -6,6 +6,7 @@
 #include <cmath>
 #include <queue>
 
+
 #include "Texture.h"
 #include "Shader_Loader.h"
 #include "Render_Utils.h"
@@ -168,19 +169,21 @@ public:
 					cout << pairHeader.actors[0] << "   " << pairHeader.actors[1] << "\n\n";
 					
 				}
-				for (int i = 0; i <= textureArrayLength; i++) {
-					// szukam ktory z obiektow pxBodies bierze udzial w kontakcie
+				// jesli statek, to on ma eksplodowac, a nie planeta
+				if (pairHeader.actors[0] == shipBody_buffor || pairHeader.actors[1] == shipBody_buffor) {
+					// renderables[0] to statek
+					renderables[0]->exploded = true;
+					hitActors.emplace_back(shipBody_buffor);
+				}
+				else {
+					for (int i = 0; i <= textureArrayLength; i++) {
+						// szukam ktory z obiektow pxBodies bierze udzial w kontakcie
 
-					// jesli statek, to on ma eksplodowac, a nie planeta
-					if (pairHeader.actors[0] == shipBody_buffor || pairHeader.actors[1] == shipBody_buffor) {
-						// renderables[0] to statek
-						renderables[0]->exploded = true;
-						hitActors.emplace_back(shipBody_buffor);
-						break;
-
-					} else if (pairHeader.actors[0] == pxBodies[i] || pairHeader.actors[1] == pxBodies[i]) {
-						renderables[i + 2]->exploded = true;
-						hitActors.emplace_back(pxBodies[i]);
+						if (pairHeader.actors[0] == pxBodies[i] || pairHeader.actors[1] == pxBodies[i]) {
+							renderables[i + 2]->exploded = true;
+							hitActors.emplace_back(pxBodies[i]);
+							cout << "KONTAKT\n";
+						}
 					}
 				}
 		}
@@ -419,6 +422,7 @@ void shoot() {
 	pxBulletBody->userData = renderables.back();
 	//pxBulletBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 	pxScene.scene->addActor(*pxBulletBody);
+	pxBodies.push_back(pxBulletBody);
 }
 
 
@@ -486,7 +490,6 @@ void drawObjectTexture(GLuint program, Core::RenderContext context, glm::mat4 mo
 }
 
 
-// !!!!
 glm::vec3 lightPos1 = glm::vec3(0, 0, 0);
 glm::vec3 lightPos2 = glm::vec3(50, 10, 50);
 
@@ -720,6 +723,9 @@ void renderScene()
 	glutSwapBuffers();
 }
 
+void OnReshape(int width, int height) {
+	;
+}
 void init()
 {
 	srand(time(0));
@@ -778,13 +784,22 @@ void idle()
 	glutPostRedisplay();
 }
 
+
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-	glutInitWindowPosition(200, 200);
+	// anti-aliasing
+	glutSetOption(GLUT_MULTISAMPLE, 16);
+	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_MULTISAMPLE);
+	glEnable(GL_MULTISAMPLE);
+	
+	
+	glutInitWindowPosition(100, 100);
 	glutInitWindowSize(700, 700);
 	glutCreateWindow("Kosmos");
+	//glutFullScreen();
+	glutReshapeFunc(onReshape);
+
 	glewInit();
 
 	init();

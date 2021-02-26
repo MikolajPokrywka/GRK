@@ -28,7 +28,7 @@ glm::mat4 Core::createViewMatrix( glm::vec3 position, glm::vec3 forward, glm::ve
 	cameraTranslation[3] = glm::vec4(-position, 1.0f);
 	
 
-	return cameraRotation * cameraTranslation;
+	return cameraRotation * cameraTranslation * 0.5;
 }
 
 
