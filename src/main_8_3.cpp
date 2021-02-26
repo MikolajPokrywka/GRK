@@ -20,7 +20,7 @@ PxRigidDynamic* shipBody = nullptr;
 PxRigidDynamic* shipBody_buffor = nullptr;
 PxRigidDynamic* pxSunBody = nullptr;
 PxRigidDynamic* pxBulletBody = nullptr;
-int textureArrayLength = 4;
+int textureArrayLength = 8;
 GLuint pxProgramColor;
 GLuint pxProgramTexture;
 
@@ -280,8 +280,8 @@ void initRenderables()
 	renderables.emplace_back(asteroid6);
 
 
-	const GLuint textures[50] = { texLoaded, texLoadedsaturn, texLoadedMars, texLoadedSaturn2 };
-	const GLuint textures2[50] = { textureEarth2, textureAsteroid2, textureAsteroid2, textureAsteroid2 };
+	const GLuint textures[50] = { texLoaded, texLoadedsaturn, texLoadedMars, texLoadedSaturn2, texLoaded, texLoadedsaturn, texLoadedMars, texLoadedSaturn2 };
+	const GLuint textures2[50] = { textureEarth2, textureAsteroid2, textureAsteroid2, textureAsteroid2, textureEarth2, textureAsteroid2, textureAsteroid2, textureAsteroid2 };
 	for (int j = 0; j < textureArrayLength; j++) {
 		// create box
 		Renderable* box = new Renderable();
@@ -329,7 +329,7 @@ void initPhysicsScene()
 
 
 	for (int j = 0; j < textureArrayLength; j++) {
-		PxRigidDynamic* boxBody_buffor2 = pxScene.physics->createRigidDynamic(PxTransform(-j * 2 - 3, j, -j * 2 - 3));
+		PxRigidDynamic* boxBody_buffor2 = pxScene.physics->createRigidDynamic(PxTransform(-j*1.5 - 3, j, -j*1.5 - 3));
 		PxShape* boxShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 		// za pomoca attachShape() przypisuje si� kszta�t, kt�ry reaguje na kontakt i odpowiada za fizyk�
 		boxBody_buffor2->attachShape(*boxShape);
@@ -403,7 +403,7 @@ void shoot() {
 	bullet->modelMatrix = bullet->modelMatrix * glm::scale(glm::vec3(0.01f));
 	renderables.emplace_back(bullet);
 
-	pxBulletBody = pxScene.physics->createRigidDynamic(PxTransform(shipPos.x + shipDir.x, shipPos.y + shipDir.y, shipPos.z + shipDir.z));
+	pxBulletBody = pxScene.physics->createRigidDynamic(PxTransform(shipPos.x + shipDir.x*5, shipPos.y + shipDir.y*5-2, shipPos.z + shipDir.z*5));
 	PxShape* bulletShape = pxScene.physics->createShape(PxSphereGeometry(1), *pxMaterial);
 	pxBulletBody->attachShape(*bulletShape);
 	pxBulletBody->setLinearVelocity(PxVec3(shipDir.x, shipDir.y, shipDir.z) * 50);
