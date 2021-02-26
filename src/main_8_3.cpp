@@ -76,9 +76,9 @@ std::vector<Renderable*> renderables;
 
 
 
-GLuint programID;
-GLuint TextureID;
-GLuint Texture;
+GLuint programParticle;
+GLuint texParticle;
+GLuint partText;
 GLfloat* g_particule_position_size_data;
 GLubyte* g_particule_color_data;
 Core::ParticleContext particleContext;
@@ -715,7 +715,7 @@ void renderScene()
 		}
 	}
 
-	if (isShipIntact) Core::DrawParticles(particleContext, programID, TextureID, Texture, ParticlesCount, cameraMatrix, perspectiveMatrix);
+	if (isShipIntact) Core::DrawParticles(particleContext, programParticle, texParticle, partText, ParticlesCount, cameraMatrix, perspectiveMatrix);
 
 
 
@@ -745,8 +745,8 @@ void init()
 	texLoadedSkybox = Core::LoadTexture("textures/galaxy.png");
 	programSkybox = shaderLoader.CreateProgram("shaders/shader_skybox.vert", "shaders/shader_skybox.frag");
 
-	Texture = Core::LoadTexture("textures/particle.png");
-	programID = shaderLoader.CreateProgram("shaders/shader_particle.vert", "shaders/shader_particle.frag");
+	partText = Core::LoadTexture("textures/particle.png");
+	programParticle = shaderLoader.CreateProgram("shaders/shader_particle.vert", "shaders/shader_particle.frag");
 	g_particule_position_size_data = new GLfloat[MaxParticles * 4];
 	g_particule_color_data = new GLubyte[MaxParticles * 4];
 
@@ -755,7 +755,7 @@ void init()
 		ParticlesContainer[i].cameradistance = -1.0f;
 	}
 
-	particleContext.initParticle(programID, MaxParticles, g_particule_position_size_data, g_particule_color_data);
+	particleContext.initParticle(programParticle, MaxParticles, g_particule_position_size_data, g_particule_color_data);
 
 	sphereModel = obj::loadModelFromFile("models/sphere.obj");
 	shipModel = obj::loadModelFromFile("models/spaceship.obj");
